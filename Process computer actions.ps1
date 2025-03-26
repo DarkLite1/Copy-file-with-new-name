@@ -328,16 +328,6 @@ begin {
                     }
                 }
             )
-
-            # if (!(Test-Path -LiteralPath $SourceFolder -PathType Container)) {
-            #     throw "The source folder '$SourceFolder' does not exist"
-            # }
-            # if (!(Test-Path -LiteralPath $ArchiveFolder -PathType Container)) {
-            #     throw "The archive folder '$ArchiveFolder' does not exist"
-            # }
-            # if (!(Test-Path -LiteralPath $DestinationFolder -PathType Container)) {
-            #     throw "The destination folder '$DestinationFolder' does not exist"
-            # }
             #endregion
         }
         catch {
