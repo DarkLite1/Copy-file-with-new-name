@@ -290,41 +290,59 @@ begin {
         }
         #endregion
 
-        #region Import .json file
-        Write-Verbose "Import .json file '$ImportFile'"
+        try {
+            #region Import .json file
+            Write-Verbose "Import .json file '$ImportFile'"
 
-        $jsonFileContent = Get-Content $ImportFile -Raw -Encoding UTF8 |
-        ConvertFrom-Json
-        #endregion
+            $jsonFileContent = Get-Content $ImportFile -Raw -Encoding UTF8 |
+            ConvertFrom-Json
+            #endregion
 
-        $SourceFolder = $jsonFileContent.SourceFolder
-        $ArchiveFolder = $jsonFileContent.ArchiveFolder
-        $DestinationFolder = $jsonFileContent.DestinationFolder
-        $FileExtensions = $jsonFileContent.FileExtensions
+            $SourceFolder = $jsonFileContent.SourceFolder
+            $ArchiveFolder = $jsonFileContent.ArchiveFolder
+            $DestinationFolder = $jsonFileContent.DestinationFolder
+            $FileExtensions = $jsonFileContent.FileExtensions
 
-        #region Test .json file properties
-        if (!$SourceFolder) {
-            throw "The property 'SourceFolder' is missing in the .json file"
-        }
-        if (!$ArchiveFolder) {
-            throw "The property 'ArchiveFolder' is missing in the .json file"
-        }
-        if (!$DestinationFolder) {
-            throw "The property 'DestinationFolder' is missing in the .json file"
-        }
-        #endregion
+            #region Test .json file properties
+            @(
+                'SourceFolder', 'ArchiveFolder', 'DestinationFolder'
+            ).where(
+                { -not $jsonFileContent.$_ }
+            ).foreach(
+                { throw "Property '$_' not found" }
+            )
+            #endregion
 
-        #region Test folders exist
-        if (!(Test-Path -LiteralPath $SourceFolder -PathType Container)) {
-            throw "The source folder '$SourceFolder' does not exist"
+            #region Test folders exist
+            @{
+                SourceFolder      = $SourceFolder
+                ArchiveFolder     = $ArchiveFolder
+                DestinationFolder = $DestinationFolder
+            }.GetEnumerator().ForEach(
+                {
+                    $key = $_.Key
+                    $value = $_.Value
+
+                    if (!(Test-Path -LiteralPath $value -PathType Container)) {
+                        throw "$key '$value' not found"
+                    }
+                }
+            )
+
+            # if (!(Test-Path -LiteralPath $SourceFolder -PathType Container)) {
+            #     throw "The source folder '$SourceFolder' does not exist"
+            # }
+            # if (!(Test-Path -LiteralPath $ArchiveFolder -PathType Container)) {
+            #     throw "The archive folder '$ArchiveFolder' does not exist"
+            # }
+            # if (!(Test-Path -LiteralPath $DestinationFolder -PathType Container)) {
+            #     throw "The destination folder '$DestinationFolder' does not exist"
+            # }
+            #endregion
         }
-        if (!(Test-Path -LiteralPath $ArchiveFolder -PathType Container)) {
-            throw "The archive folder '$ArchiveFolder' does not exist"
+        catch {
+            throw "Input file '$ImportFile': $_"
         }
-        if (!(Test-Path -LiteralPath $DestinationFolder -PathType Container)) {
-            throw "The destination folder '$DestinationFolder' does not exist"
-        }
-        #endregion
     }
     catch {
         Write-Warning $_

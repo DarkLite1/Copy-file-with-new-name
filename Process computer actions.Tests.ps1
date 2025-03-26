@@ -2,16 +2,19 @@
 #Requires -Version 7
 
 BeforeAll {
+    $realCmdLet = @{
+        OutFile = Get-Command Out-File
+    }
+
     $testInputFile = @{
-        SourceFolder      = 1
-        ArchiveFolder     = ''
-        DestinationFolder = ''
+        SourceFolder      = (New-Item 'TestDrive:/s' -ItemType Directory).FullName
+        ArchiveFolder     = (New-Item 'TestDrive:/a' -ItemType Directory).FullName
+        DestinationFolder = (New-Item 'TestDrive:/d' -ItemType Directory).FullName
         FileExtensions    = @()
     }
 
     $testOutParams = @{
         FilePath = (New-Item "TestDrive:/Test.json" -ItemType File).FullName
-        Encoding = 'utf8'
     }
 
     $testScript = $PSCommandPath.Replace('.Tests.ps1', '.ps1')
@@ -55,42 +58,37 @@ Describe 'create an error log file when' {
         }
         Context 'property' {
             It '<_> not found' -ForEach @(
-                'SendMail', 'MaxConcurrentJobs', 'Remove'
+                'SourceFolder', 'ArchiveFolder', 'DestinationFolder'
             ) {
                 $testNewInputFile = Copy-ObjectHC $testInputFile
                 $testNewInputFile.$_ = $null
 
-                $testNewInputFile | ConvertTo-Json -Depth 7 |
-                Out-File @testOutParams
+                & $realCmdLet.OutFile @testOutParams -InputObject (
+                    $testNewInputFile | ConvertTo-Json -Depth 7
+                )
 
                 .$testScript @testParams
 
-                Should -Invoke Send-MailHC -Exactly 1 -ParameterFilter {
-                    (&$MailAdminParams) -and
-                    ($Message -like "*$ImportFile*Property '$_' not found*")
+                Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
+                    ($FilePath -like '* - Error.txt') -and
+                    ($InputObject -like "*$ImportFile*Property '$_' not found*")
                 }
-                Should -Invoke Write-EventLog -Exactly 1 -ParameterFilter {
-                    $EntryType -eq 'Error'
-                }
-            } -Tag test
-            Context 'the file is not found' {
-                It 'Path.<_>' -ForEach @(
-                    'RemoveEmptyFoldersScript', 'RemoveFile', 'RemoveFilesInFolder'
-                ) {
-                    $testNewParams = Copy-ObjectHC $testParams
-                    $testNewParams.$_ = 'c:\NotExisting.ps1'
+            }
+            It 'Folder <_> not found' -ForEach @(
+                'SourceFolder', 'ArchiveFolder', 'DestinationFolder'
+            ) {
+                $testNewInputFile = Copy-ObjectHC $testInputFile
+                $testNewInputFile.$_ = 'TestDrive:\nonExisting'
 
-                    $testInputFile | ConvertTo-Json -Depth 7 |
-                    Out-File @testOutParams
+                & $realCmdLet.OutFile @testOutParams -InputObject (
+                    $testNewInputFile | ConvertTo-Json -Depth 7
+                )
 
-                    .$testScript @testNewParams
+                .$testScript @testParams
 
-                    Should -Invoke Send-MailHC -Exactly 1 -ParameterFilter {
-                        (&$MailAdminParams) -and ($Message -like "*Path.$_ 'c:\NotExisting.ps1' not found*")
-                    }
-                    Should -Invoke Write-EventLog -Exactly 1 -ParameterFilter {
-                        $EntryType -eq 'Error'
-                    }
+                Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
+                    ($FilePath -like '* - Error.txt') -and
+                    ($InputObject -like "*$ImportFile*$_ 'TestDrive:\nonExisting' not found*")
                 }
             }
         }
