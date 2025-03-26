@@ -20,6 +20,8 @@ BeforeAll {
         ImportFile = $testOutParams.FilePath
         LogFolder  = New-Item 'TestDrive:/log' -ItemType Directory
     }
+
+    Mock Out-File
 }
 Describe 'the mandatory parameters are' {
     It '<_>' -ForEach @('ImportFile') {
@@ -29,18 +31,16 @@ Describe 'the mandatory parameters are' {
 }
 Describe 'create an error log file when' {
     It 'the log folder cannot be created' {
-        Mock Out-File
-
         $testNewParams = $testParams.clone()
         $testNewParams.LogFolder = 'xxx:://notExistingLocation'
 
         .$testScript @testNewParams
 
         Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-            ($FilePath -like '*\Error.log') -and
+            ($FilePath -like '*\Error.txt') -and
             ($InputObject -like '*Failed creating the log folder*')
         }
-    } -Tag test
+    }
     Context 'the ImportFile' {
         It 'is not found' {
             $testNewParams = $testParams.clone()
@@ -48,11 +48,9 @@ Describe 'create an error log file when' {
 
             .$testScript @testNewParams
 
-            Should -Invoke Send-MailHC -Exactly 1 -ParameterFilter {
-                (&$MailAdminParams) -and ($Message -like "Cannot find path*nonExisting.json*")
-            }
-            Should -Invoke Write-EventLog -Exactly 1 -ParameterFilter {
-                $EntryType -eq 'Error'
+            Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
+                ($FilePath -like '* - Error.txt') -and
+                ($InputObject -like '*Cannot find path*nonExisting.json*')
             }
         }
         Context 'property' {
@@ -74,7 +72,7 @@ Describe 'create an error log file when' {
                 Should -Invoke Write-EventLog -Exactly 1 -ParameterFilter {
                     $EntryType -eq 'Error'
                 }
-            }
+            } -Tag test
             Context 'the file is not found' {
                 It 'Path.<_>' -ForEach @(
                     'RemoveEmptyFoldersScript', 'RemoveFile', 'RemoveFilesInFolder'

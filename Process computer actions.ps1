@@ -283,7 +283,7 @@ begin {
                 Date         = 'ScriptStartTime'
                 NoFormatting = $true
             }
-            $logFile = New-LogFileNameHC @LogParams
+            $logFile = '{0} - Error.txt' -f (New-LogFileNameHC @LogParams)
         }
         catch {
             throw "Failed creating the log folder '$LogFolder': $_"
@@ -331,7 +331,7 @@ begin {
 
         $params = @{
             FilePath = if ($logFile) { $logFile }
-            else { "$PSScriptRoot\Error.log" }
+            else { "$PSScriptRoot\Error.txt" }
         }
         "Failure:`r`n`r`n- $_" | Out-File @params
         exit
