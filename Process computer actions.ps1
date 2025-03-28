@@ -2,17 +2,19 @@
 
 <#
     .SYNOPSIS
-        Copy, rename and move files between the process computer and the local computer.
+        Copy file from source folder to destination folder with a new name.
 
     .DESCRIPTION
+        This script selects all files in the source folder that have a creation time more recent than yesterday morning. The selected files are copied to the destination folder with a new file name.
+
+        The new name is based on the date string found in the file name:
+        - source file name: 'Analyse_26032025.xlsx'
+        - destination file name: 'AnalysesJour_20250326.xlsx'
+
+        Only files with a matching file extension will be processed. If no file
+        extension is provided, all files will be processed.
+
         This script is triggered by a scheduled task that is executed by a user account with permissions on the SMB file share of the process computer.
-
-        The script copies files based on their creation date from the source
-        folder to a subfolder in the source folder 'yyyy\mm', on the process
-        computer.
-
-        After the copy, the files are moved from the source folder on the process computer to the destination folder on the local computer and
-        renamed 'FileName_ddmmyyyy.pdf'.
 
         The script will only save errors in the log folder
 
@@ -20,22 +22,17 @@
         A .JSON file that contains all the parameters used by the script.
 
     .PARAMETER SourceFolder
-        The source folder on the process computer.
-
-    .PARAMETER ArchiveFolder
-        The folder on the process computer where a copy each file will be saved
-        for later troubleshooting.
+        The source folder.
 
     .PARAMETER DestinationFolder
-        The folder where the files in the source folder will be moved too.
+        The destination folder.
 
     .PARAMETER FileExtensions
         Only the files with a matching file extension will be processed. If
         blank, all files will be processed.
 
     .PARAMETER LogFolder
-        The folder where the log files will be saved.
-
+        The folder where the error log files will be saved.
 #>
 
 [CmdLetBinding()]
@@ -299,13 +296,12 @@ begin {
             #endregion
 
             $SourceFolder = $jsonFileContent.SourceFolder
-            $ArchiveFolder = $jsonFileContent.ArchiveFolder
             $DestinationFolder = $jsonFileContent.DestinationFolder
             $FileExtensions = $jsonFileContent.FileExtensions
 
             #region Test .json file properties
             @(
-                'SourceFolder', 'ArchiveFolder', 'DestinationFolder'
+                'SourceFolder', 'DestinationFolder'
             ).where(
                 { -not $jsonFileContent.$_ }
             ).foreach(
@@ -316,7 +312,6 @@ begin {
             #region Test folders exist
             @{
                 SourceFolder      = $SourceFolder
-                ArchiveFolder     = $ArchiveFolder
                 DestinationFolder = $DestinationFolder
             }.GetEnumerator().ForEach(
                 {
