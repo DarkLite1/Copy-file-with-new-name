@@ -1,5 +1,4 @@
 {
   "SourceFolder": "C:\\folderA",
-  "DestinationFolder": "C:\\folderB",
-  "FileExtensions": []
+  "DestinationFolder": "C:\\folderB"
 }

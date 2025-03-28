@@ -27,10 +27,6 @@
     .PARAMETER DestinationFolder
         The destination folder.
 
-    .PARAMETER FileExtensions
-        Only the files with a matching file extension will be processed. If
-        blank, all files will be processed.
-
     .PARAMETER LogFolder
         The folder where the error log files will be saved.
 #>
