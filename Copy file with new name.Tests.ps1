@@ -121,6 +121,53 @@ Describe 'create an error log file when' {
                         ($InputObject -like "*$ImportFile*Property 'DaysInThePastToLookForFiles' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '-1' is not supported*")
                     }
                 }
+                It 'is an empty string' {
+                    $testNewInputFile = Copy-ObjectHC $testInputFile
+                    $testNewInputFile.DaysInThePastToLookForFiles = ''
+
+                    & $realCmdLet.OutFile @testOutParams -InputObject (
+                        $testNewInputFile | ConvertTo-Json -Depth 7
+                    )
+
+                    .$testScript @testParams
+
+                    Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
+                        ($FilePath -like '* - Error.txt') -and
+                        ($InputObject -like "*$ImportFile*Property 'DaysInThePastToLookForFiles' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '' is not supported*")
+                    }
+                }
+                It 'is missing' {
+                    $testNewInputFile = @{
+                        SourceFolder = $testInputFile.SourceFolder
+                        DestinationFolder = $testInputFile.DestinationFolder
+                    }
+
+                    & $realCmdLet.OutFile @testOutParams -InputObject (
+                        $testNewInputFile | ConvertTo-Json -Depth 7
+                    )
+
+                    .$testScript @testParams
+
+                    Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
+                        ($FilePath -like '* - Error.txt') -and
+                        ($InputObject -like "*$ImportFile*Property 'DaysInThePastToLookForFiles' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '' is not supported*")
+                    }
+                }
+                It '0 is accepted' {
+                    $testNewInputFile = Copy-ObjectHC $testInputFile
+                    $testNewInputFile.DaysInThePastToLookForFiles = '0'
+
+                    & $realCmdLet.OutFile @testOutParams -InputObject (
+                        $testNewInputFile | ConvertTo-Json -Depth 7
+                    )
+
+                    .$testScript @testParams
+
+                    Should -Invoke -Not Out-File -ParameterFilter {
+                        ($FilePath -like '* - Error.txt') -and
+                        ($InputObject -like "*DaysInThePastToLookForFiles*")
+                    }
+                }
             }
         }
     }
