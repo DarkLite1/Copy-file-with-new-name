@@ -8,9 +8,7 @@ BeforeAll {
 
     $testInputFile = @{
         SourceFolder      = (New-Item 'TestDrive:/s' -ItemType Directory).FullName
-        ArchiveFolder     = (New-Item 'TestDrive:/a' -ItemType Directory).FullName
         DestinationFolder = (New-Item 'TestDrive:/d' -ItemType Directory).FullName
-        FileExtensions    = @()
     }
 
     $testOutParams = @{
@@ -58,7 +56,7 @@ Describe 'create an error log file when' {
         }
         Context 'property' {
             It '<_> not found' -ForEach @(
-                'SourceFolder', 'ArchiveFolder', 'DestinationFolder'
+                'SourceFolder', 'DestinationFolder'
             ) {
                 $testNewInputFile = Copy-ObjectHC $testInputFile
                 $testNewInputFile.$_ = $null
@@ -75,7 +73,7 @@ Describe 'create an error log file when' {
                 }
             }
             It 'Folder <_> not found' -ForEach @(
-                'SourceFolder', 'ArchiveFolder', 'DestinationFolder'
+                'SourceFolder', 'DestinationFolder'
             ) {
                 $testNewInputFile = Copy-ObjectHC $testInputFile
                 $testNewInputFile.$_ = 'TestDrive:\nonExisting'
@@ -94,6 +92,6 @@ Describe 'create an error log file when' {
         }
     }
 }
-Describe '' {
+# Describe '' {
 
-}
+# }

@@ -5,7 +5,7 @@
         Copy file from source folder to destination folder with a new name.
 
     .DESCRIPTION
-        This script selects all files in the source folder that have a creation time more recent than yesterday morning. The selected files are copied to the destination folder with a new file name.
+        This script selects all '.xlsx' files in the source folder that have a creation time more recent than yesterday morning. The selected files are copied to the destination folder with a new file name.
 
         The new name is based on the date string found in the file name:
         - source file name: 'Analyse_26032025.xlsx'
@@ -293,7 +293,6 @@ begin {
 
             $SourceFolder = $jsonFileContent.SourceFolder
             $DestinationFolder = $jsonFileContent.DestinationFolder
-            $FileExtensions = $jsonFileContent.FileExtensions
 
             #region Test .json file properties
             @(
@@ -342,50 +341,99 @@ process {
         #region Get files from source folder
         Write-Verbose "Get all files in source folder '$SourceFolder'"
 
-        $allSourceFiles = Get-ChildItem -LiteralPath $SourceFolder -File
+        $params = @{
+            LiteralPath = $SourceFolder
+            Recurse     = $true
+            File        = $true
+            Filter      = '*.xlsx'
+        }
+        $allSourceFiles = @(Get-ChildItem @params)
 
         if (!$allSourceFiles) {
             Write-Verbose 'No files found, exit script'
-
             exit
         }
         #endregion
 
         #region Select files to process
-        $filesToProcess = $allSourceFiles
+        $compareDate = (Get-Date).AddDays(-1).Date
 
-        if ($FileExtensions) {
-            Write-Verbose "Select files with extension '$FileExtensions'"
-
-            $filesToProcess = $allSourceFiles.where(
-                { $FileExtensions -contains $_.Extension }
-            )
-        }
-        else {
-            Write-Verbose 'Select all files'
-        }
+        $filesToProcess = $allSourceFiles.Where({
+                ($_.CreationTime.Date -ge $compareDate) -and
+                ($_.Name -match 'Analyse_[0-9]{8}.xlsx')
+            })
 
         Write-Verbose "Found $($filesToProcess.Count) file(s) to process"
 
         if (!$filesToProcess) {
             Write-Verbose 'No files found, exit script'
-
             exit
         }
         #endregion
 
-        #region Copy files from source folder to archive folder
+        foreach ($file in $filesToProcess) {
+            try {
+                #region Create new file name
+                $year = $file.Name.Substring(12, 4)
+                $month = $file.Name.Substring(10, 2)
+                $day = $file.Name.Substring(8, 2)
 
+                $newFileName = "AnalyseJour_$($year)$($month)$($day).xlsx"
+                #endregion
 
-        #endregion
+                #region Create destination folder
+                try {
+                    $params = @{
+                        Path      = $DestinationFolder
+                        ChildPath = $year
+                    }
+                    $destinationFolder = Join-Path @params
 
-        #region Move files from Source folder to Destination folder and rename
+                    Write-Verbose "Create destination folder '$destinationFolder'"
 
+                    $params = @{
+                        LiteralPath = $destinationFolder
+                        PathType    = 'Container'
+                    }
+                    if (-not (Test-Path @params)) {
+                        $params = @{
+                            Path     = $destinationFolder
+                            ItemType = 'Directory'
+                            Force    = $true
+                        }
+                        $null = New-Item @params
+                    }
+                }
+                catch {
+                    throw "Failed to create destination folder '$destinationFolder': $_"
+                }
+                #endregion
 
-        #endregion
+                #region Copy file to destination folder
+                try {
+                    $params = @{
+                        LiteralPath = $file.FullName
+                        Destination = "$($destinationFolder)\$newFileName"
+                        Force       = $true
+                    }
+
+                    Write-Verbose "Copy file '$($params.LiteralPath)' to '$($params.Destination)'"
+
+                    Copy-Item @params
+                }
+                catch {
+                    throw "Failed to copy file '$($params.LiteralPath)' to '$($params.Destination)': $_"
+                }
+                #endregion
+            }
+            catch {
+                Write-Warning $_
+                "Failure:`r`n`r`n- $_" | Out-File -FilePath $logFile -Append
+            }
+        }
     }
     catch {
         Write-Warning $_
-        "Failure:`r`n`r`n- $_" | Out-File -FilePath $logFile
+        "Failure:`r`n`r`n- $_" | Out-File -FilePath $logFile -Append
     }
 }
