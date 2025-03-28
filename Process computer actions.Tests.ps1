@@ -92,6 +92,62 @@ Describe 'create an error log file when' {
         }
     }
 }
-# Describe '' {
+Describe 'when the source folder is empty' {
+    It 'no error log file is created' {
+        $testNewInputFile = Copy-ObjectHC $testInputFile
+        $testNewInputFile.SourceFolder = (New-Item 'TestDrive:/empty' -ItemType Directory).FullName
 
-# }
+        & $realCmdLet.OutFile @testOutParams -InputObject (
+            $testNewInputFile | ConvertTo-Json -Depth 7
+        )
+
+        .$testScript @testParams
+
+        Should -Not -Invoke Out-File
+    }
+}
+Describe 'when there is a file in the source folder' {
+    It 'the file is copied to the destination folder with the correct name' {
+        $testNewInputFile = Copy-ObjectHC $testInputFile
+
+        $testNewInputFile.SourceFolder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
+        $testNewInputFile.DestinationFolder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
+
+        New-Item "$($testNewInputFile.SourceFolder)\Analyse_26032025.xlsx" -ItemType File
+
+        & $realCmdLet.OutFile @testOutParams -InputObject (
+            $testNewInputFile | ConvertTo-Json -Depth 7
+        )
+
+        .$testScript @testParams
+
+        Get-Item "$($testNewInputFile.DestinationFolder)\2025\AnalysesJour_20250326.xlsx" |
+        Should -Not -BeNullOrEmpty
+    }
+}
+Describe 'when a file fails to copy' {
+    BeforeAll {
+        Mock Copy-Item {
+            throw 'Oops'
+        }
+
+        $testNewInputFile = Copy-ObjectHC $testInputFile
+
+        $testNewInputFile.SourceFolder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
+        $testNewInputFile.DestinationFolder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
+
+        $testFile = New-Item "$($testNewInputFile.SourceFolder)\Analyse_26032025.xlsx" -ItemType File
+
+        & $realCmdLet.OutFile @testOutParams -InputObject (
+            $testNewInputFile | ConvertTo-Json -Depth 7
+        )
+
+        .$testScript @testParams
+    }
+    It 'an error log file is created' {
+        Should -Invoke Out-File -Times 1 -Exactly -Scope Describe -ParameterFilter {
+            ($FilePath -like '* - Error.txt') -and
+            ($InputObject -like "*Failure for source file*Failed to copy file '$($testFile.FullName)'*")
+        }
+    }
+}

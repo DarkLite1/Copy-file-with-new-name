@@ -373,12 +373,16 @@ process {
 
         foreach ($file in $filesToProcess) {
             try {
+                Write-Verbose "Processing file '$($file.FullName)'"
+
                 #region Create new file name
                 $year = $file.Name.Substring(12, 4)
                 $month = $file.Name.Substring(10, 2)
                 $day = $file.Name.Substring(8, 2)
 
-                $newFileName = "AnalyseJour_$($year)$($month)$($day).xlsx"
+                $newFileName = "AnalysesJour_$($year)$($month)$($day).xlsx"
+
+                Write-Verbose "New file name '$newFileName'"
                 #endregion
 
                 #region Create destination folder
@@ -389,7 +393,7 @@ process {
                     }
                     $destinationFolder = Join-Path @params
 
-                    Write-Verbose "Create destination folder '$destinationFolder'"
+                    Write-Verbose "Destination folder '$destinationFolder'"
 
                     $params = @{
                         LiteralPath = $destinationFolder
@@ -401,6 +405,9 @@ process {
                             ItemType = 'Directory'
                             Force    = $true
                         }
+
+                        Write-Verbose 'Create destination folder'
+
                         $null = New-Item @params
                     }
                 }
@@ -428,7 +435,7 @@ process {
             }
             catch {
                 Write-Warning $_
-                "Failure:`r`n`r`n- $_" | Out-File -FilePath $logFile -Append
+                "Failure for source file '$($file.FullName)':`r`n`r`n- $_" | Out-File -FilePath $logFile -Append
             }
         }
     }
