@@ -7,8 +7,9 @@ BeforeAll {
     }
 
     $testInputFile = @{
-        SourceFolder      = (New-Item 'TestDrive:/s' -ItemType Directory).FullName
-        DestinationFolder = (New-Item 'TestDrive:/d' -ItemType Directory).FullName
+        SourceFolder                = (New-Item 'TestDrive:/s' -ItemType Directory).FullName
+        DestinationFolder           = (New-Item 'TestDrive:/d' -ItemType Directory).FullName
+        DaysInThePastToLookForFiles = 1
     }
 
     $testOutParams = @{
@@ -87,6 +88,38 @@ Describe 'create an error log file when' {
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                     ($FilePath -like '* - Error.txt') -and
                     ($InputObject -like "*$ImportFile*$_ 'TestDrive:\nonExisting' not found*")
+                }
+            }
+            Context 'DaysInThePastToLookForFiles' {
+                It 'is not a number' {
+                    $testNewInputFile = Copy-ObjectHC $testInputFile
+                    $testNewInputFile.DaysInThePastToLookForFiles = 'a'
+
+                    & $realCmdLet.OutFile @testOutParams -InputObject (
+                        $testNewInputFile | ConvertTo-Json -Depth 7
+                    )
+
+                    .$testScript @testParams
+
+                    Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
+                        ($FilePath -like '* - Error.txt') -and
+                        ($InputObject -like "*$ImportFile*Property 'DaysInThePastToLookForFiles' must be 0 or a positive number. Number 0 processes all files in the source folder. The value 'a' is not supported*")
+                    }
+                }
+                It 'is a negative number' {
+                    $testNewInputFile = Copy-ObjectHC $testInputFile
+                    $testNewInputFile.DaysInThePastToLookForFiles = -1
+
+                    & $realCmdLet.OutFile @testOutParams -InputObject (
+                        $testNewInputFile | ConvertTo-Json -Depth 7
+                    )
+
+                    .$testScript @testParams
+
+                    Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
+                        ($FilePath -like '* - Error.txt') -and
+                        ($InputObject -like "*$ImportFile*Property 'DaysInThePastToLookForFiles' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '-1' is not supported*")
+                    }
                 }
             }
         }

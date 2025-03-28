@@ -1,4 +1,6 @@
 {
   "SourceFolder": "C:\\folderA",
-  "DestinationFolder": "C:\\folderB"
+  "DestinationFolder": "C:\\folderB",
+  "DaysInThePastToLookForFiles": 1,
+  "?": "When DaysInThePastToLookForFiles is set to 1, the script processes all files created since yesterday morning. When set to, for example 5, the script processes all files created in the last 5 days. When set to 0, all files are processed."
 }

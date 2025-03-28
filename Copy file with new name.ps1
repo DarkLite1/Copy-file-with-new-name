@@ -302,6 +302,23 @@ begin {
             ).foreach(
                 { throw "Property '$_' not found" }
             )
+
+            #region Test integer value
+            try {
+                if ($jsonFileContent.DaysInThePastToLookForFiles -eq '') {
+                    throw 'a blank string is not supported'
+                }
+
+                [int]$DaysInThePastToLookForFiles = $jsonFileContent.DaysInThePastToLookForFiles
+
+                if ($jsonFileContent.DaysInThePastToLookForFiles -lt 0) {
+                    throw 'a negative number is not supported'
+                }
+            }
+            catch {
+                throw "Property 'DaysInThePastToLookForFiles' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '$($jsonFileContent.DaysInThePastToLookForFiles)' is not supported."
+            }
+            #endregion
             #endregion
 
             #region Test folders exist
@@ -347,7 +364,10 @@ process {
             File        = $true
             Filter      = '*.xlsx'
         }
-        $allSourceFiles = @(Get-ChildItem @params)
+        $allSourceFiles = @(Get-ChildItem @params | Where-Object {
+                $_.Name -match 'Analyse_[0-9]{8}.xlsx'
+            }
+        )
 
         if (!$allSourceFiles) {
             Write-Verbose 'No files found, exit script'
@@ -356,12 +376,18 @@ process {
         #endregion
 
         #region Select files to process
-        $compareDate = (Get-Date).AddDays(-1).Date
+        if ($DaysInThePastToLookForFiles -eq 0) {
+            $filesToProcess = $allSourceFiles
+        }
+        else {
+            $compareDate = (Get-Date).AddDays(
+                - $DaysInThePastToLookForFiles
+            ).Date
 
-        $filesToProcess = $allSourceFiles.Where({
-                ($_.CreationTime.Date -ge $compareDate) -and
-                ($_.Name -match 'Analyse_[0-9]{8}.xlsx')
-            })
+            $filesToProcess = $allSourceFiles.Where(
+                { $_.CreationTime.Date -ge $compareDate }
+            )
+        }
 
         Write-Verbose "Found $($filesToProcess.Count) file(s) to process"
 
