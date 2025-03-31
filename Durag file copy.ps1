@@ -27,6 +27,14 @@
     .PARAMETER DestinationFolder
         The destination folder.
 
+    .PARAMETER ProcessFilesInThePastNumberOfDays
+        Number of days in the past for which to process files.
+
+        Example:
+        - 0 : Process all files in the source folder, no filter
+        - 1 : Process files created since yesterday morning
+        - 5 : Process files created in the last 5 days
+
     .PARAMETER LogFolder
         The folder where the error log files will be saved.
 #>
@@ -305,18 +313,18 @@ begin {
 
             #region Test integer value
             try {
-                if ($jsonFileContent.DaysInThePastToLookForFiles -eq '') {
+                if ($jsonFileContent.ProcessFilesInThePastNumberOfDays -eq '') {
                     throw 'a blank string is not supported'
                 }
 
-                [int]$DaysInThePastToLookForFiles = $jsonFileContent.DaysInThePastToLookForFiles
+                [int]$ProcessFilesInThePastNumberOfDays = $jsonFileContent.ProcessFilesInThePastNumberOfDays
 
-                if ($jsonFileContent.DaysInThePastToLookForFiles -lt 0) {
+                if ($jsonFileContent.ProcessFilesInThePastNumberOfDays -lt 0) {
                     throw 'a negative number is not supported'
                 }
             }
             catch {
-                throw "Property 'DaysInThePastToLookForFiles' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '$($jsonFileContent.DaysInThePastToLookForFiles)' is not supported."
+                throw "Property 'ProcessFilesInThePastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '$($jsonFileContent.ProcessFilesInThePastNumberOfDays)' is not supported."
             }
             #endregion
             #endregion
@@ -376,12 +384,12 @@ process {
         #endregion
 
         #region Select files to process
-        if ($DaysInThePastToLookForFiles -eq 0) {
+        if ($ProcessFilesInThePastNumberOfDays -eq 0) {
             $filesToProcess = $allSourceFiles
         }
         else {
             $compareDate = (Get-Date).AddDays(
-                - $DaysInThePastToLookForFiles
+                - $ProcessFilesInThePastNumberOfDays
             ).Date
 
             $filesToProcess = $allSourceFiles.Where(
