@@ -287,7 +287,14 @@ begin {
             $logFile = '{0} - Error.txt' -f (New-LogFileNameHC @LogParams)
         }
         catch {
-            throw "Failed creating the log folder '$LogFolder': $_"
+            Write-Warning $_
+
+            $params = @{
+                FilePath = "$PSScriptRoot\..\Error.txt"
+            }
+            "Failure:`r`n`r`n- Failed creating the log folder '$LogFolder': $_" | Out-File @params
+
+            exit
         }
         #endregion
 
@@ -351,12 +358,7 @@ begin {
     }
     catch {
         Write-Warning $_
-
-        $params = @{
-            FilePath = if ($logFile) { $logFile }
-            else { "$PSScriptRoot\Error.txt" }
-        }
-        "Failure:`r`n`r`n- $_" | Out-File @params
+        "Failure:`r`n`r`n- $_" | Out-File -FilePath $logFile -Append
         exit
     }
 }
