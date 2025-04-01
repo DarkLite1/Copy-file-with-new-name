@@ -2,19 +2,19 @@
 
 <#
     .SYNOPSIS
-        Copy file from source folder to destination folder with a new name.
+        Copy files created in the last x days from the source folder to
+        the destination folder.
 
     .DESCRIPTION
-        This script selects all '.xlsx' files in the source folder that have a creation time more recent than yesterday morning. The selected files are copied to the destination folder with a new file name.
+        This script selects all '.xlsx' files in the source folder that have a
+        creation time more recent than the number of days defined in parameter
+        'ProcessFilesInThePastNumberOfDays'.
 
-        The new name is based on the date string found in the file name:
-        - source file name: 'Analyse_26032025.xlsx'
-        - destination file name: 'AnalysesJour_20250326.xlsx'
+        The selected files are copied from the source folder to the destination
+        folder.
 
-        Only files with a matching file extension will be processed. If no file
-        extension is provided, all files will be processed.
-
-        This script is triggered by a scheduled task that is executed by a user account with permissions on the SMB file share of the process computer.
+        This script is triggered by a scheduled task that has permissions in the
+        source and destination folder.
 
         The script will only save errors in the log folder
 
