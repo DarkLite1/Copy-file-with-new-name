@@ -1,7 +1,7 @@
 {
   "Source": {
     "Folder": "C:\\folderA",
-    "MatchFileRegex": "Analyse_[0-9]{8}.xlsx"
+    "MatchFileNameRegex": "Analyse_[0-9]{8}.xlsx"
   },
   "Destination": {
     "Folder": "C:\\folderB"

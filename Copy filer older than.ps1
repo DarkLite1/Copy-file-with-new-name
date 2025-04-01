@@ -11,7 +11,8 @@
         'ProcessFilesInThePastNumberOfDays'.
 
         The selected files are copied from the source folder to the destination
-        folder.
+        folder. Files with the same name in the destination folder are
+        overwritten.
 
         This script is triggered by a scheduled task that has permissions in the
         source and destination folder.
@@ -24,7 +25,7 @@
     .PARAMETER SourceFolder
         The source folder.
 
-    .PARAMETER MatchFileRegex
+    .PARAMETER MatchFileNameRegex
         Only files that match the regex will be copied.
 
     .PARAMETER DestinationFolder
@@ -310,12 +311,12 @@ begin {
             #endregion
 
             $SourceFolder = $jsonFileContent.Source.Folder
-            $MatchFileRegex = $jsonFileContent.Source.MatchFileRegex
+            $MatchFileNameRegex = $jsonFileContent.Source.MatchFileNameRegex
             $DestinationFolder = $jsonFileContent.Destination.Folder
 
             #region Test .json file properties
             @(
-                'Folder', 'MatchFileRegex'
+                'Folder', 'MatchFileNameRegex'
             ).where(
                 { -not $jsonFileContent.Source.$_ }
             ).foreach(
@@ -387,7 +388,7 @@ process {
             Filter      = '*.xlsx'
         }
         $allSourceFiles = @(Get-ChildItem @params | Where-Object {
-                $_.Name -match $MatchFileRegex
+                $_.Name -match $MatchFileNameRegex
             }
         )
 
@@ -423,52 +424,11 @@ process {
             try {
                 Write-Verbose "Processing file '$($file.FullName)'"
 
-                #region Create new file name
-                $year = $file.Name.Substring(12, 4)
-                $month = $file.Name.Substring(10, 2)
-                $day = $file.Name.Substring(8, 2)
-
-                $newFileName = "AnalysesJour_$($year)$($month)$($day).xlsx"
-
-                Write-Verbose "New file name '$newFileName'"
-                #endregion
-
-                #region Create destination folder
-                try {
-                    $params = @{
-                        Path      = $DestinationFolder
-                        ChildPath = $year
-                    }
-                    $destinationFolder = Join-Path @params
-
-                    Write-Verbose "Destination folder '$destinationFolder'"
-
-                    $params = @{
-                        LiteralPath = $destinationFolder
-                        PathType    = 'Container'
-                    }
-                    if (-not (Test-Path @params)) {
-                        $params = @{
-                            Path     = $destinationFolder
-                            ItemType = 'Directory'
-                            Force    = $true
-                        }
-
-                        Write-Verbose 'Create destination folder'
-
-                        $null = New-Item @params
-                    }
-                }
-                catch {
-                    throw "Failed to create destination folder '$destinationFolder': $_"
-                }
-                #endregion
-
                 #region Copy file to destination folder
                 try {
                     $params = @{
                         LiteralPath = $file.FullName
-                        Destination = "$($destinationFolder)\$newFileName"
+                        Destination = "$($DestinationFolder)\$($file.Name)"
                         Force       = $true
                     }
 

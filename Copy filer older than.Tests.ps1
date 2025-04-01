@@ -9,7 +9,7 @@ BeforeAll {
     $testInputFile = @{
         Source                            = @{
             Folder         = (New-Item 'TestDrive:/s' -ItemType Directory).FullName
-            MatchFileRegex = 'Analyse_[0-9]{8}.xlsx'
+            MatchFileNameRegex = 'Analyse_[0-9]{8}.xlsx'
         }
         Destination                       = @{
             Folder = (New-Item 'TestDrive:/d' -ItemType Directory).FullName
@@ -62,7 +62,7 @@ Describe 'create an error log file when' {
         }
         Context 'property' {
             It '<_> not found' -ForEach @(
-                'Folder', 'MatchFileRegex'
+                'Folder', 'MatchFileNameRegex'
             ) {
                 $testNewInputFile = Copy-ObjectHC $testInputFile
                 $testNewInputFile.Source.$_ = $null
@@ -209,7 +209,7 @@ Describe 'when the source folder is empty' {
     }
 }
 Describe 'when there is a file in the source folder' {
-    It 'the file is copied to the destination folder with the correct name' {
+    It 'the file is copied to the destination folder' {
         $testNewInputFile = Copy-ObjectHC $testInputFile
 
         $testNewInputFile.Source.Folder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
@@ -223,7 +223,7 @@ Describe 'when there is a file in the source folder' {
 
         .$testScript @testParams
 
-        Get-Item "$($testNewInputFile.Destination.Folder)\2025\AnalysesJour_20250326.xlsx" |
+        Get-Item "$($testNewInputFile.Destination.Folder)\Analyse_26032025.xlsx" |
         Should -Not -BeNullOrEmpty
     }
 }
