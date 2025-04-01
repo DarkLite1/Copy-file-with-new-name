@@ -7,9 +7,13 @@ BeforeAll {
     }
 
     $testInputFile = @{
-        SourceFolder                      = (New-Item 'TestDrive:/s' -ItemType Directory).FullName
-        DestinationFolder                 = (New-Item 'TestDrive:/d' -ItemType Directory).FullName
-        MatchFileRegex                    = 'Analyse_[0-9]{8}.xlsx'
+        Source                            = @{
+            Folder         = (New-Item 'TestDrive:/s' -ItemType Directory).FullName
+            MatchFileRegex = 'Analyse_[0-9]{8}.xlsx'
+        }
+        Destination                       = @{
+            Folder = (New-Item 'TestDrive:/d' -ItemType Directory).FullName
+        }
         ProcessFilesInThePastNumberOfDays = 1
     }
 
@@ -58,10 +62,10 @@ Describe 'create an error log file when' {
         }
         Context 'property' {
             It '<_> not found' -ForEach @(
-                'SourceFolder', 'DestinationFolder'
+                'Folder', 'MatchFileRegex'
             ) {
                 $testNewInputFile = Copy-ObjectHC $testInputFile
-                $testNewInputFile.$_ = $null
+                $testNewInputFile.Source.$_ = $null
 
                 & $realCmdLet.OutFile @testOutParams -InputObject (
                     $testNewInputFile | ConvertTo-Json -Depth 7
@@ -71,14 +75,31 @@ Describe 'create an error log file when' {
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                     ($FilePath -like '* - Error.txt') -and
-                    ($InputObject -like "*$ImportFile*Property '$_' not found*")
+                    ($InputObject -like "*$ImportFile*Property 'Source.$_' not found*")
+                }
+            }
+            It '<_> not found' -ForEach @(
+                'Folder'
+            ) {
+                $testNewInputFile = Copy-ObjectHC $testInputFile
+                $testNewInputFile.Destination.$_ = $null
+
+                & $realCmdLet.OutFile @testOutParams -InputObject (
+                    $testNewInputFile | ConvertTo-Json -Depth 7
+                )
+
+                .$testScript @testParams
+
+                Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
+                    ($FilePath -like '* - Error.txt') -and
+                    ($InputObject -like "*$ImportFile*Property 'Destination.$_' not found*")
                 }
             }
             It 'Folder <_> not found' -ForEach @(
-                'SourceFolder', 'DestinationFolder'
+                'Source', 'Destination'
             ) {
                 $testNewInputFile = Copy-ObjectHC $testInputFile
-                $testNewInputFile.$_ = 'TestDrive:\nonExisting'
+                $testNewInputFile[$_]['Folder'] = 'TestDrive:\nonExisting'
 
                 & $realCmdLet.OutFile @testOutParams -InputObject (
                     $testNewInputFile | ConvertTo-Json -Depth 7
@@ -88,7 +109,7 @@ Describe 'create an error log file when' {
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                     ($FilePath -like '* - Error.txt') -and
-                    ($InputObject -like "*$ImportFile*$_ 'TestDrive:\nonExisting' not found*")
+                    ($InputObject -like "*$ImportFile*$_.Folder 'TestDrive:\nonExisting' not found*")
                 }
             }
             Context 'ProcessFilesInThePastNumberOfDays' {
@@ -139,9 +160,8 @@ Describe 'create an error log file when' {
                 }
                 It 'is missing' {
                     $testNewInputFile = @{
-                        SourceFolder      = $testInputFile.SourceFolder
-                        DestinationFolder = $testInputFile.DestinationFolder
-                        MatchFileRegex    = $testInputFile.MatchFileRegex
+                        Source      = $testInputFile.Source
+                        Destination = $testInputFile.Destination
                     }
 
                     & $realCmdLet.OutFile @testOutParams -InputObject (
@@ -177,7 +197,7 @@ Describe 'create an error log file when' {
 Describe 'when the source folder is empty' {
     It 'no error log file is created' {
         $testNewInputFile = Copy-ObjectHC $testInputFile
-        $testNewInputFile.SourceFolder = (New-Item 'TestDrive:/empty' -ItemType Directory).FullName
+        $testNewInputFile.Source.Folder = (New-Item 'TestDrive:/empty' -ItemType Directory).FullName
 
         & $realCmdLet.OutFile @testOutParams -InputObject (
             $testNewInputFile | ConvertTo-Json -Depth 7
@@ -192,10 +212,10 @@ Describe 'when there is a file in the source folder' {
     It 'the file is copied to the destination folder with the correct name' {
         $testNewInputFile = Copy-ObjectHC $testInputFile
 
-        $testNewInputFile.SourceFolder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
-        $testNewInputFile.DestinationFolder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
+        $testNewInputFile.Source.Folder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
+        $testNewInputFile.Destination.Folder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
 
-        New-Item "$($testNewInputFile.SourceFolder)\Analyse_26032025.xlsx" -ItemType File
+        New-Item "$($testNewInputFile.Source.Folder)\Analyse_26032025.xlsx" -ItemType File
 
         & $realCmdLet.OutFile @testOutParams -InputObject (
             $testNewInputFile | ConvertTo-Json -Depth 7
@@ -203,7 +223,7 @@ Describe 'when there is a file in the source folder' {
 
         .$testScript @testParams
 
-        Get-Item "$($testNewInputFile.DestinationFolder)\2025\AnalysesJour_20250326.xlsx" |
+        Get-Item "$($testNewInputFile.Destination.Folder)\2025\AnalysesJour_20250326.xlsx" |
         Should -Not -BeNullOrEmpty
     }
 }
@@ -215,10 +235,10 @@ Describe 'when a file fails to copy' {
 
         $testNewInputFile = Copy-ObjectHC $testInputFile
 
-        $testNewInputFile.SourceFolder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
-        $testNewInputFile.DestinationFolder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
+        $testNewInputFile.Source.Folder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
+        $testNewInputFile.Destination.Folder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
 
-        $testFile = New-Item "$($testNewInputFile.SourceFolder)\Analyse_26032025.xlsx" -ItemType File
+        $testFile = New-Item "$($testNewInputFile.Source.Folder)\Analyse_26032025.xlsx" -ItemType File
 
         & $realCmdLet.OutFile @testOutParams -InputObject (
             $testNewInputFile | ConvertTo-Json -Depth 7

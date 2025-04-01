@@ -309,17 +309,25 @@ begin {
             ConvertFrom-Json
             #endregion
 
-            $SourceFolder = $jsonFileContent.SourceFolder
-            $DestinationFolder = $jsonFileContent.DestinationFolder
-            $MatchFileRegex = $jsonFileContent.MatchFileRegex
+            $SourceFolder = $jsonFileContent.Source.Folder
+            $MatchFileRegex = $jsonFileContent.Source.MatchFileRegex
+            $DestinationFolder = $jsonFileContent.Destination.Folder
 
             #region Test .json file properties
             @(
-                'SourceFolder', 'DestinationFolder', 'MatchFileRegex'
+                'Folder', 'MatchFileRegex'
             ).where(
-                { -not $jsonFileContent.$_ }
+                { -not $jsonFileContent.Source.$_ }
             ).foreach(
-                { throw "Property '$_' not found" }
+                { throw "Property 'Source.$_' not found" }
+            )
+
+            @(
+                'Folder'
+            ).where(
+                { -not $jsonFileContent.Destination.$_ }
+            ).foreach(
+                { throw "Property 'Destination.$_' not found" }
             )
 
             #region Test integer value
@@ -342,8 +350,8 @@ begin {
 
             #region Test folders exist
             @{
-                SourceFolder      = $SourceFolder
-                DestinationFolder = $DestinationFolder
+                'Source.Folder'      = $SourceFolder
+                'Destination.Folder' = $DestinationFolder
             }.GetEnumerator().ForEach(
                 {
                     $key = $_.Key
