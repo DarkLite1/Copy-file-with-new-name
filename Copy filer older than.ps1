@@ -6,9 +6,9 @@
         the destination folder.
 
     .DESCRIPTION
-        This script selects all '.xlsx' files in the source folder that have a
-        creation time more recent than the number of days defined in parameter
-        'ProcessFilesInThePastNumberOfDays'.
+        This script selects all files in the source folder that match the
+        'MatchFileNameRegex' and filters these based on the creation time
+        defined in 'ProcessFilesInThePastNumberOfDays'.
 
         The selected files are copied from the source folder to the destination
         folder. Files with the same name in the destination folder are
