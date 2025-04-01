@@ -24,6 +24,9 @@
     .PARAMETER SourceFolder
         The source folder.
 
+    .PARAMETER MatchFileRegex
+        Only files that match the regex will be copied.
+
     .PARAMETER DestinationFolder
         The destination folder.
 
@@ -308,10 +311,11 @@ begin {
 
             $SourceFolder = $jsonFileContent.SourceFolder
             $DestinationFolder = $jsonFileContent.DestinationFolder
+            $MatchFileRegex = $jsonFileContent.MatchFileRegex
 
             #region Test .json file properties
             @(
-                'SourceFolder', 'DestinationFolder'
+                'SourceFolder', 'DestinationFolder', 'MatchFileRegex'
             ).where(
                 { -not $jsonFileContent.$_ }
             ).foreach(
@@ -375,7 +379,7 @@ process {
             Filter      = '*.xlsx'
         }
         $allSourceFiles = @(Get-ChildItem @params | Where-Object {
-                $_.Name -match 'Analyse_[0-9]{8}.xlsx'
+                $_.Name -match $MatchFileRegex
             }
         )
 

@@ -9,6 +9,7 @@ BeforeAll {
     $testInputFile = @{
         SourceFolder                      = (New-Item 'TestDrive:/s' -ItemType Directory).FullName
         DestinationFolder                 = (New-Item 'TestDrive:/d' -ItemType Directory).FullName
+        MatchFileRegex                    = 'Analyse_[0-9]{8}.xlsx'
         ProcessFilesInThePastNumberOfDays = 1
     }
 
@@ -140,6 +141,7 @@ Describe 'create an error log file when' {
                     $testNewInputFile = @{
                         SourceFolder      = $testInputFile.SourceFolder
                         DestinationFolder = $testInputFile.DestinationFolder
+                        MatchFileRegex    = $testInputFile.MatchFileRegex
                     }
 
                     & $realCmdLet.OutFile @testOutParams -InputObject (

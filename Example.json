@@ -1,6 +1,7 @@
 {
   "SourceFolder": "C:\\folderA",
   "DestinationFolder": "C:\\folderB",
+  "MatchFileRegex": "Analyse_[0-9]{8}.xlsx",
   "ProcessFilesInThePastNumberOfDays": 1,
   "?": {
     "ProcessFilesInThePastNumberOfDays": "Value 0 : process all files in the source folder, no filter. Value 1 : process files created since yesterday morning. Value 5 : Process files created in the last 5 days. ..."
