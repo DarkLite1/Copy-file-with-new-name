@@ -7,17 +7,21 @@ BeforeAll {
     }
 
     $testInputFile = @{
-        Action                                   = 'copy'
-        Source                                   = @{
-            Folder             = (New-Item 'TestDrive:/s' -ItemType Directory).FullName
-            MatchFileNameRegex = 'Analyse_[0-9]{8}.xlsx'
-            Recurse            = $true
-        }
-        Destination                              = @{
-            Folder        = (New-Item 'TestDrive:/d' -ItemType Directory).FullName
-            OverWriteFile = $false
-        }
-        ProcessFilesCreatedInTheLastNumberOfDays = 1
+        Tasks = @(
+            @{
+                Action                                   = 'copy'
+                Source                                   = @{
+                    Folder             = (New-Item 'TestDrive:/s' -ItemType Directory).FullName
+                    MatchFileNameRegex = 'Analyse_[0-9]{8}.xlsx'
+                    Recurse            = $true
+                }
+                Destination                              = @{
+                    Folder        = (New-Item 'TestDrive:/d' -ItemType Directory).FullName
+                    OverWriteFile = $false
+                }
+                ProcessFilesCreatedInTheLastNumberOfDays = 1
+            }
+        )
     }
 
     $testOutParams = @{
@@ -68,7 +72,7 @@ Describe 'create an error log file when' {
                 'Folder', 'MatchFileNameRegex'
             ) {
                 $testNewInputFile = Copy-ObjectHC $testInputFile
-                $testNewInputFile.Source.$_ = $null
+                $testNewInputFile.Tasks[0].Source.$_ = $null
 
                 & $realCmdLet.OutFile @testOutParams -InputObject (
                     $testNewInputFile | ConvertTo-Json -Depth 7
@@ -85,7 +89,7 @@ Describe 'create an error log file when' {
                 'Folder'
             ) {
                 $testNewInputFile = Copy-ObjectHC $testInputFile
-                $testNewInputFile.Destination.$_ = $null
+                $testNewInputFile.Tasks[0].Destination.$_ = $null
 
                 & $realCmdLet.OutFile @testOutParams -InputObject (
                     $testNewInputFile | ConvertTo-Json -Depth 7
@@ -102,7 +106,7 @@ Describe 'create an error log file when' {
                 'Source', 'Destination'
             ) {
                 $testNewInputFile = Copy-ObjectHC $testInputFile
-                $testNewInputFile[$_]['Folder'] = 'TestDrive:\nonExisting'
+                $testNewInputFile.Tasks[0].$_['Folder'] = 'TestDrive:\nonExisting'
 
                 & $realCmdLet.OutFile @testOutParams -InputObject (
                     $testNewInputFile | ConvertTo-Json -Depth 7
@@ -118,7 +122,7 @@ Describe 'create an error log file when' {
             Context 'ProcessFilesCreatedInTheLastNumberOfDays' {
                 It 'is not a number' {
                     $testNewInputFile = Copy-ObjectHC $testInputFile
-                    $testNewInputFile.ProcessFilesCreatedInTheLastNumberOfDays = 'a'
+                    $testNewInputFile.Tasks[0].ProcessFilesCreatedInTheLastNumberOfDays = 'a'
 
                     & $realCmdLet.OutFile @testOutParams -InputObject (
                         $testNewInputFile | ConvertTo-Json -Depth 7
@@ -133,7 +137,7 @@ Describe 'create an error log file when' {
                 }
                 It 'is a negative number' {
                     $testNewInputFile = Copy-ObjectHC $testInputFile
-                    $testNewInputFile.ProcessFilesCreatedInTheLastNumberOfDays = -1
+                    $testNewInputFile.Tasks[0].ProcessFilesCreatedInTheLastNumberOfDays = -1
 
                     & $realCmdLet.OutFile @testOutParams -InputObject (
                         $testNewInputFile | ConvertTo-Json -Depth 7
@@ -148,7 +152,7 @@ Describe 'create an error log file when' {
                 }
                 It 'is an empty string' {
                     $testNewInputFile = Copy-ObjectHC $testInputFile
-                    $testNewInputFile.ProcessFilesCreatedInTheLastNumberOfDays = ''
+                    $testNewInputFile.Tasks[0].ProcessFilesCreatedInTheLastNumberOfDays = ''
 
                     & $realCmdLet.OutFile @testOutParams -InputObject (
                         $testNewInputFile | ConvertTo-Json -Depth 7
@@ -163,9 +167,13 @@ Describe 'create an error log file when' {
                 }
                 It 'is missing' {
                     $testNewInputFile = @{
-                        Action      = 'copy'
-                        Source      = $testInputFile.Source
-                        Destination = $testInputFile.Destination
+                        Tasks = @(
+                            @{
+                                Action      = 'copy'
+                                Source      = $testInputFile.Tasks[0].Source
+                                Destination = $testInputFile.Tasks[0].Destination
+                            }
+                        )
                     }
 
                     & $realCmdLet.OutFile @testOutParams -InputObject (
@@ -181,7 +189,7 @@ Describe 'create an error log file when' {
                 }
                 It '0 is accepted' {
                     $testNewInputFile = Copy-ObjectHC $testInputFile
-                    $testNewInputFile.ProcessFilesCreatedInTheLastNumberOfDays = '0'
+                    $testNewInputFile.Tasks[0].ProcessFilesCreatedInTheLastNumberOfDays = '0'
 
                     & $realCmdLet.OutFile @testOutParams -InputObject (
                         $testNewInputFile | ConvertTo-Json -Depth 7
@@ -197,7 +205,7 @@ Describe 'create an error log file when' {
             }
             It "Action is not value 'copy' or 'move'" {
                 $testNewInputFile = Copy-ObjectHC $testInputFile
-                $testNewInputFile.Action = 'wrong'
+                $testNewInputFile.Tasks[0].Action = 'wrong'
 
                 & $realCmdLet.OutFile @testOutParams -InputObject (
                     $testNewInputFile | ConvertTo-Json -Depth 7
@@ -212,7 +220,7 @@ Describe 'create an error log file when' {
             }
             It "Source.Recurse is not a boolean" {
                 $testNewInputFile = Copy-ObjectHC $testInputFile
-                $testNewInputFile.Source.Recurse = 'wrong'
+                $testNewInputFile.Tasks[0].Source.Recurse = 'wrong'
 
                 & $realCmdLet.OutFile @testOutParams -InputObject (
                     $testNewInputFile | ConvertTo-Json -Depth 7
@@ -227,7 +235,7 @@ Describe 'create an error log file when' {
             }
             It "Destination.OverWriteFile is not a boolean" {
                 $testNewInputFile = Copy-ObjectHC $testInputFile
-                $testNewInputFile.Destination.OverWriteFile = 'wrong'
+                $testNewInputFile.Tasks[0].Destination.OverWriteFile = 'wrong'
 
                 & $realCmdLet.OutFile @testOutParams -InputObject (
                     $testNewInputFile | ConvertTo-Json -Depth 7
@@ -246,7 +254,7 @@ Describe 'create an error log file when' {
 Describe 'when the source folder is empty' {
     It 'no error log file is created' {
         $testNewInputFile = Copy-ObjectHC $testInputFile
-        $testNewInputFile.Source.Folder = (New-Item 'TestDrive:/empty' -ItemType Directory).FullName
+        $testNewInputFile.Tasks[0].Source.Folder = (New-Item 'TestDrive:/empty' -ItemType Directory).FullName
 
         & $realCmdLet.OutFile @testOutParams -InputObject (
             $testNewInputFile | ConvertTo-Json -Depth 7
@@ -262,12 +270,12 @@ Describe 'when there is a file in the source folder' {
         BeforeAll {
             $testNewInputFile = Copy-ObjectHC $testInputFile
 
-            $testNewInputFile.Action = 'copy'
+            $testNewInputFile.Tasks[0].Action = 'copy'
 
-            $testNewInputFile.Source.Folder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
-            $testNewInputFile.Destination.Folder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
+            $testNewInputFile.Tasks[0].Source.Folder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
+            $testNewInputFile.Tasks[0].Destination.Folder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
 
-            $testSourceFile = New-Item "$($testNewInputFile.Source.Folder)\Analyse_26032025.xlsx" -ItemType File
+            $testSourceFile = New-Item "$($testNewInputFile.Tasks[0].Source.Folder)\Analyse_26032025.xlsx" -ItemType File
 
             & $realCmdLet.OutFile @testOutParams -InputObject (
                 $testNewInputFile | ConvertTo-Json -Depth 7
@@ -276,7 +284,7 @@ Describe 'when there is a file in the source folder' {
             .$testScript @testParams
         }
         It 'the file is copied to the destination folder' {
-            "$($testNewInputFile.Destination.Folder)\Analyse_26032025.xlsx" |
+            "$($testNewInputFile.Tasks[0].Destination.Folder)\Analyse_26032025.xlsx" |
             Should -Exist
         }
         It 'the source file is left untouched' {
@@ -287,12 +295,12 @@ Describe 'when there is a file in the source folder' {
         BeforeAll {
             $testNewInputFile = Copy-ObjectHC $testInputFile
 
-            $testNewInputFile.Action = 'move'
+            $testNewInputFile.Tasks[0].Action = 'move'
 
-            $testNewInputFile.Source.Folder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
-            $testNewInputFile.Destination.Folder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
+            $testNewInputFile.Tasks[0].Source.Folder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
+            $testNewInputFile.Tasks[0].Destination.Folder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
 
-            $testSourceFile = New-Item "$($testNewInputFile.Source.Folder)\Analyse_26032025.xlsx" -ItemType File
+            $testSourceFile = New-Item "$($testNewInputFile.Tasks[0].Source.Folder)\Analyse_26032025.xlsx" -ItemType File
 
             & $realCmdLet.OutFile @testOutParams -InputObject (
                 $testNewInputFile | ConvertTo-Json -Depth 7
@@ -301,7 +309,7 @@ Describe 'when there is a file in the source folder' {
             .$testScript @testParams
         }
         It 'the file is present in the destination folder' {
-            "$($testNewInputFile.Destination.Folder)\Analyse_26032025.xlsx" |
+            "$($testNewInputFile.Tasks[0].Destination.Folder)\Analyse_26032025.xlsx" |
             Should -Exist
         }
         It 'the source file is no longer there' {
@@ -317,10 +325,10 @@ Describe 'when a file fails to copy' {
 
         $testNewInputFile = Copy-ObjectHC $testInputFile
 
-        $testNewInputFile.Source.Folder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
-        $testNewInputFile.Destination.Folder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
+        $testNewInputFile.Tasks[0].Source.Folder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
+        $testNewInputFile.Tasks[0].Destination.Folder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
 
-        $testFile = New-Item "$($testNewInputFile.Source.Folder)\Analyse_26032025.xlsx" -ItemType File
+        $testFile = New-Item "$($testNewInputFile.Tasks[0].Source.Folder)\Analyse_26032025.xlsx" -ItemType File
 
         & $realCmdLet.OutFile @testOutParams -InputObject (
             $testNewInputFile | ConvertTo-Json -Depth 7
@@ -331,7 +339,7 @@ Describe 'when a file fails to copy' {
     It 'an error log file is created' {
         Should -Invoke Out-File -Times 1 -Exactly -Scope Describe -ParameterFilter {
             ($FilePath -like '* - Error.txt') -and
-            ($InputObject -like "*Failure for source file*Failed to copy file '$($testFile.FullName)'*")
+            ($InputObject -like "*Failed to copy file '$($testFile.FullName)'*Oops*")
         }
     }
 }

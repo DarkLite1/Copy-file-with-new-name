@@ -1,15 +1,19 @@
 {
-  "Action": "copy",
-  "Source": {
-    "Folder": "C:\\folderA",
-    "Recurse": true,
-    "MatchFileNameRegex": "Analyse_[0-9]{8}.xlsx"
-  },
-  "Destination": {
-    "Folder": "C:\\folderB",
-    "OverWriteFile": true
-  },
-  "ProcessFilesCreatedInTheLastNumberOfDays": 1,
+  "Tasks": [
+    {
+      "Action": "copy",
+      "Source": {
+        "Folder": "C:\\folderA",
+        "Recurse": true,
+        "MatchFileNameRegex": "Analyse_[0-9]{8}.xlsx"
+      },
+      "Destination": {
+        "Folder": "C:\\folderB",
+        "OverWriteFile": true
+      },
+      "ProcessFilesCreatedInTheLastNumberOfDays": 1
+    }
+  ],
   "?": {
     "Action": "Value 'copy' : Copy files. Value 'move' : Move files. Value is not case sensitive",
     "Source": {

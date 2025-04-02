@@ -20,35 +20,38 @@
     .PARAMETER ImportFile
         A .JSON file that contains all the parameters used by the script.
 
-    .PARAMETER Action
+    .PARAMETER Tasks
+        One copy or move job for each task.
+
+    .PARAMETER Task.Action
         - 'copy' : Copy files from the source folder to the destination folder.
         - 'move' : Move files from the source folder to the destination folder.
 
         Action value is not case sensitive.
 
-    .PARAMETER Source.Folder
+    .PARAMETER Task.Source.Folder
         The source folder.
 
-    .PARAMETER Source.Recurse
+    .PARAMETER Task.Source.Recurse
         - TRUE  : search root folder and child folders for files.
         - FALSE : search only in root folder for files.
 
-    .PARAMETER Source.MatchFileNameRegex
+    .PARAMETER Task.Source.MatchFileNameRegex
         Only files that match the regex will be copied.
 
         Example:
         - '*.*'    : process all files.
         - '*.xlsx' : process only Excel files.
 
-    .PARAMETER Destination.Folder
+    .PARAMETER Task.Destination.Folder
         The destination folder.
 
-    .PARAMETER Destination.OverWriteFile
+    .PARAMETER Task.Destination.OverWriteFile
         - TRUE  : overwrite duplicate files in the destination folder.
         - FALSE : do not overwrite duplicate files in the destination folder
                   and log an error.
 
-    .PARAMETER ProcessFilesCreatedInTheLastNumberOfDays
+    .PARAMETER Task.ProcessFilesCreatedInTheLastNumberOfDays
         Process files that are created in the last x days.
 
         Example:
@@ -327,99 +330,100 @@ begin {
             ConvertFrom-Json
             #endregion
 
-            $SourceFolder = $jsonFileContent.Source.Folder
-            $MatchFileNameRegex = $jsonFileContent.Source.MatchFileNameRegex
-            $DestinationFolder = $jsonFileContent.Destination.Folder
-            $Recurse = $jsonFileContent.Source.Recurse
-            $Action = $jsonFileContent.Action
-            $OverWriteFile = $jsonFileContent.Destination.OverWriteFile
+            $Tasks = $jsonFileContent.Tasks
 
-            #region Test .json file properties
-            @(
-                'Folder', 'MatchFileNameRegex'
-            ).where(
-                { -not $jsonFileContent.Source.$_ }
-            ).foreach(
-                { throw "Property 'Source.$_' not found" }
-            )
-
-            @(
-                'Folder'
-            ).where(
-                { -not $jsonFileContent.Destination.$_ }
-            ).foreach(
-                { throw "Property 'Destination.$_' not found" }
-            )
-
-            #region Test Action value
-            if ($Action -notmatch '^copy$|^move$') {
-                throw "Action value '$Action' is not supported. Supported Action values are: 'copy' or 'move'."
+            if (-not $Tasks) {
+                throw "Property 'Tasks' cannot be empty"
             }
-            #endregion
 
-            #region Test integer value
-            try {
-                if ($jsonFileContent.ProcessFilesCreatedInTheLastNumberOfDays -eq '') {
-                    throw 'a blank string is not supported'
-                }
-
-                [int]$ProcessFilesCreatedInTheLastNumberOfDays = $jsonFileContent.ProcessFilesCreatedInTheLastNumberOfDays
-
-                if ($jsonFileContent.ProcessFilesCreatedInTheLastNumberOfDays -lt 0) {
-                    throw 'a negative number is not supported'
-                }
-            }
-            catch {
-                throw "Property 'ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '$($jsonFileContent.ProcessFilesCreatedInTheLastNumberOfDays)' is not supported."
-            }
-            #endregion
-
-            #region Test boolean values
-            foreach (
-                $boolean in
+            foreach ($task in $Tasks) {
+                #region Test .json file properties
                 @(
-                    'Recurse'
+                    'Folder', 'MatchFileNameRegex'
+                ).where(
+                    { -not $task.Source.$_ }
+                ).foreach(
+                    { throw "Property 'Source.$_' not found" }
                 )
-            ) {
-                try {
-                    $null = [Boolean]::Parse($jsonFileContent.Source.$boolean)
-                }
-                catch {
-                    throw "Property 'Source.$boolean' is not a boolean value"
-                }
-            }
 
-            foreach (
-                $boolean in
                 @(
-                    'OverWriteFile'
+                    'Folder'
+                ).where(
+                    { -not $task.Destination.$_ }
+                ).foreach(
+                    { throw "Property 'Destination.$_' not found" }
                 )
-            ) {
+
+                #region Test Action value
+                if ($task.Action -notmatch '^copy$|^move$') {
+                    throw "Action value '$($task.Action)' is not supported. Supported Action values are: 'copy' or 'move'."
+                }
+                #endregion
+
+                #region Test integer value
                 try {
-                    $null = [Boolean]::Parse($jsonFileContent.Destination.$boolean)
-                }
-                catch {
-                    throw "Property 'Destination.$boolean' is not a boolean value"
-                }
-            }
-            #endregion
-            #endregion
+                    if ($task.ProcessFilesCreatedInTheLastNumberOfDays -eq '') {
+                        throw 'a blank string is not supported'
+                    }
 
-            #region Test folders exist
-            @{
-                'Source.Folder'      = $SourceFolder
-                'Destination.Folder' = $DestinationFolder
-            }.GetEnumerator().ForEach(
-                {
-                    $key = $_.Key
-                    $value = $_.Value
+                    [int]$ProcessFilesCreatedInTheLastNumberOfDays = $task.ProcessFilesCreatedInTheLastNumberOfDays
 
-                    if (!(Test-Path -LiteralPath $value -PathType Container)) {
-                        throw "$key '$value' not found"
+                    if ($task.ProcessFilesCreatedInTheLastNumberOfDays -lt 0) {
+                        throw 'a negative number is not supported'
                     }
                 }
-            )
-            #endregion
+                catch {
+                    throw "Property 'ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '$($task.ProcessFilesCreatedInTheLastNumberOfDays)' is not supported."
+                }
+                #endregion
+
+                #region Test boolean values
+                foreach (
+                    $boolean in
+                    @(
+                        'Recurse'
+                    )
+                ) {
+                    try {
+                        $null = [Boolean]::Parse($task.Source.$boolean)
+                    }
+                    catch {
+                        throw "Property 'Source.$boolean' is not a boolean value"
+                    }
+                }
+
+                foreach (
+                    $boolean in
+                    @(
+                        'OverWriteFile'
+                    )
+                ) {
+                    try {
+                        $null = [Boolean]::Parse($task.Destination.$boolean)
+                    }
+                    catch {
+                        throw "Property 'Destination.$boolean' is not a boolean value"
+                    }
+                }
+                #endregion
+                #endregion
+
+                #region Test folders exist
+                @{
+                    'Source.Folder'      = $task.Source.Folder
+                    'Destination.Folder' = $task.Destination.Folder
+                }.GetEnumerator().ForEach(
+                    {
+                        $key = $_.Key
+                        $value = $_.Value
+
+                        if (!(Test-Path -LiteralPath $value -PathType Container)) {
+                            throw "$key '$value' not found"
+                        }
+                    }
+                )
+                #endregion
+            }
         }
         catch {
             throw "Input file '$ImportFile': $_"
@@ -433,81 +437,90 @@ begin {
 }
 
 process {
-    try {
-        #region Get files from source folder
-        Write-Verbose "Get all files in source folder '$SourceFolder'"
+    foreach ($task in $Tasks) {
+        try {
+            $Action = $task.Action
+            $SourceFolder = $task.Source.Folder
+            $MatchFileNameRegex = $task.Source.MatchFileNameRegex
+            $Recurse = $task.Source.Recurse
+            $DestinationFolder = $task.Destination.Folder
+            $OverWriteFile = $task.Destination.OverWriteFile
 
-        $params = @{
-            LiteralPath = $SourceFolder
-            Recurse     = $Recurse
-            File        = $true
-        }
-        $allSourceFiles = @(Get-ChildItem @params | Where-Object {
-                $_.Name -match $MatchFileNameRegex
+            #region Get files from source folder
+            Write-Verbose "Get all files in source folder '$SourceFolder'"
+
+            $params = @{
+                LiteralPath = $SourceFolder
+                Recurse     = $Recurse
+                File        = $true
             }
-        )
-
-        if (!$allSourceFiles) {
-            Write-Verbose 'No files found, exit script'
-            exit
-        }
-        #endregion
-
-        #region Select files to process
-        if ($ProcessFilesCreatedInTheLastNumberOfDays -eq 0) {
-            $filesToProcess = $allSourceFiles
-        }
-        else {
-            $compareDate = (Get-Date).AddDays(
-                - $ProcessFilesCreatedInTheLastNumberOfDays
-            ).Date
-
-            $filesToProcess = $allSourceFiles.Where(
-                { $_.CreationTime.Date -ge $compareDate }
+            $allSourceFiles = @(Get-ChildItem @params | Where-Object {
+                    $_.Name -match $MatchFileNameRegex
+                }
             )
-        }
 
-        Write-Verbose "Found $($filesToProcess.Count) file(s) to process"
+            if (!$allSourceFiles) {
+                Write-Verbose 'No files found, exit script'
+                exit
+            }
+            #endregion
 
-        if (!$filesToProcess) {
-            Write-Verbose 'No files found, exit script'
-            exit
-        }
-        #endregion
+            #region Select files to process
+            if ($ProcessFilesCreatedInTheLastNumberOfDays -eq 0) {
+                $filesToProcess = $allSourceFiles
+            }
+            else {
+                $compareDate = (Get-Date).AddDays(
+                    - $ProcessFilesCreatedInTheLastNumberOfDays
+                ).Date
 
-        foreach ($file in $filesToProcess) {
-            try {
-                #region Copy file to destination folder
+                $filesToProcess = $allSourceFiles.Where(
+                    { $_.CreationTime.Date -ge $compareDate }
+                )
+            }
+
+            Write-Verbose "Found $($filesToProcess.Count) file(s) to process"
+
+            if (!$filesToProcess) {
+                Write-Verbose 'No files found, exit script'
+                exit
+            }
+            #endregion
+
+            foreach ($file in $filesToProcess) {
                 try {
-                    $params = @{
-                        LiteralPath = $file.FullName
-                        Destination = "$($DestinationFolder)\$($file.Name)"
-                        Force       = $OverWriteFile
-                    }
+                    #region Copy file to destination folder
+                    try {
+                        $params = @{
+                            LiteralPath = $file.FullName
+                            Destination = "$($DestinationFolder)\$($file.Name)"
+                            Force       = $OverWriteFile
+                        }
 
-                    Write-Verbose "$Action file '$($params.LiteralPath)' to '$($params.Destination)'"
+                        Write-Verbose "$Action file '$($params.LiteralPath)' to '$($params.Destination)'"
 
-                    if ($Action -eq 'copy') {
-                        Copy-Item @params
+                        if ($Action -eq 'copy') {
+                            Copy-Item @params
 
+                        }
+                        else {
+                            Move-Item @params
+                        }
                     }
-                    else {
-                        Move-Item @params
+                    catch {
+                        throw "Failed to $Action file '$($params.LiteralPath)' to '$($params.Destination)': $_"
                     }
+                    #endregion
                 }
                 catch {
-                    throw "Failed to $Action file '$($params.LiteralPath)' to '$($params.Destination)': $_"
+                    Write-Warning $_
+                    "Failure:`r`n`r`n- Action: $Action`r`n- Source folder: $SourceFolder`r`n- Destination folder: $DestinationFolder`r`n-File $($file.FullName)`r`n`r`nError: $_" | Out-File -FilePath $logFile -Append
                 }
-                #endregion
-            }
-            catch {
-                Write-Warning $_
-                "Failure for source file '$($file.FullName)':`r`n`r`n- $_" | Out-File -FilePath $logFile -Append
             }
         }
-    }
-    catch {
-        Write-Warning $_
-        "Failure:`r`n`r`n- $_" | Out-File -FilePath $logFile -Append
+        catch {
+            Write-Warning $_
+            "Failure:`r`n`r`n- Action: $Action`r`n- Source folder: $SourceFolder`r`n- Destination folder: $DestinationFolder `r`n`r`nError: $_" | Out-File -FilePath $logFile -Append
+        }
     }
 }
