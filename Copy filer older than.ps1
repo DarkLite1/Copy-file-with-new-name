@@ -385,7 +385,6 @@ process {
             LiteralPath = $SourceFolder
             Recurse     = $true
             File        = $true
-            Filter      = '*.xlsx'
         }
         $allSourceFiles = @(Get-ChildItem @params | Where-Object {
                 $_.Name -match $MatchFileNameRegex
