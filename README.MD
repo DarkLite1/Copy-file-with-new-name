@@ -23,7 +23,7 @@ It then performs either a 'copy' or 'move' operation. Error logging is implement
 
 ## Prerequisites
 
-* Windows PowerShell.
+* Windows PowerShell 7.
 * Permissions:
     * Read access to the `Source.Folder`.
     * Write/Modify access to the `Destination.Folder`.
