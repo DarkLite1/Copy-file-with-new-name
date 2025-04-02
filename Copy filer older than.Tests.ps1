@@ -283,6 +283,31 @@ Describe 'when there is a file in the source folder' {
             $testSourceFile | Should -Exist
         }
     }
+    Context 'and Action is move' {
+        BeforeAll {
+            $testNewInputFile = Copy-ObjectHC $testInputFile
+
+            $testNewInputFile.Action = 'move'
+
+            $testNewInputFile.Source.Folder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
+            $testNewInputFile.Destination.Folder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
+
+            $testSourceFile = New-Item "$($testNewInputFile.Source.Folder)\Analyse_26032025.xlsx" -ItemType File
+
+            & $realCmdLet.OutFile @testOutParams -InputObject (
+                $testNewInputFile | ConvertTo-Json -Depth 7
+            )
+
+            .$testScript @testParams
+        }
+        It 'the file is present in the destination folder' {
+            "$($testNewInputFile.Destination.Folder)\Analyse_26032025.xlsx" |
+            Should -Exist
+        }
+        It 'the source file is no longer there' {
+            $testSourceFile | Should -Not -Exist
+        }
+    }
 }
 Describe 'when a file fails to copy' {
     BeforeAll {
