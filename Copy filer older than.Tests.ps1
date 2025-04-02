@@ -225,6 +225,21 @@ Describe 'create an error log file when' {
                     ($InputObject -like "*$ImportFile*Property 'Source.Recurse' is not a boolean value*")
                 }
             }
+            It "Destination.OverWriteFile is not a boolean" {
+                $testNewInputFile = Copy-ObjectHC $testInputFile
+                $testNewInputFile.Destination.OverWriteFile = 'wrong'
+
+                & $realCmdLet.OutFile @testOutParams -InputObject (
+                    $testNewInputFile | ConvertTo-Json -Depth 7
+                )
+
+                .$testScript @testParams
+
+                Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
+                    ($FilePath -like '* - Error.txt') -and
+                    ($InputObject -like "*$ImportFile*Property 'Destination.OverWriteFile' is not a boolean value*")
+                }
+            }
         }
     }
 }
