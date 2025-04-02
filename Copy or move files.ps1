@@ -2,34 +2,51 @@
 
 <#
     .SYNOPSIS
-        Copy files created in the last x days from the source folder to
-        the destination folder.
+        Copy or move files from one folder to another folder.
 
     .DESCRIPTION
         This script selects all files in the source folder that match the
         'MatchFileNameRegex' and filters these based on the creation time
         defined in 'ProcessFilesCreatedInTheLastNumberOfDays'.
 
-        The selected files are copied from the source folder to the destination
-        folder. Files with the same name in the destination folder are
-        overwritten.
+        The selected files are copied or moved, depending on the 'Action' value
+        from the source folder to the destination folder.
 
-        This script is triggered by a scheduled task that has permissions in the
-        source and destination folder.
+        This script is intended to be triggered by a scheduled task that has
+        permissions in the source and destination folder.
 
-        The script will only save errors in the log folder
+        The script will only save errors in the log folder.
 
     .PARAMETER ImportFile
         A .JSON file that contains all the parameters used by the script.
 
-    .PARAMETER SourceFolder
+    .PARAMETER Action
+        - 'copy' : Copy files from the source folder to the destination folder.
+        - 'move' : Move files from the source folder to the destination folder.
+
+        Action value is not case sensitive.
+
+    .PARAMETER Source.Folder
         The source folder.
 
-    .PARAMETER MatchFileNameRegex
+    .PARAMETER Source.Recurse
+        - TRUE  : search root folder and child folders for files.
+        - FALSE : search only in root folder for files.
+
+    .PARAMETER Source.MatchFileNameRegex
         Only files that match the regex will be copied.
 
-    .PARAMETER DestinationFolder
+        Example:
+        - '*.*'    : process all files.
+        - '*.xlsx' : process only Excel files.
+
+    .PARAMETER Destination.Folder
         The destination folder.
+
+    .PARAMETER Destination.OverWriteFile
+        - TRUE  : overwrite duplicate files in the destination folder.
+        - FALSE : do not overwrite duplicate files in the destination folder
+                  and log an error.
 
     .PARAMETER ProcessFilesCreatedInTheLastNumberOfDays
         Process files that are created in the last x days.
