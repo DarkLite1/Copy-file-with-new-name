@@ -15,7 +15,7 @@ BeforeAll {
         }
         Destination                              = @{
             Folder        = (New-Item 'TestDrive:/d' -ItemType Directory).FullName
-            OverWriteFile = $true
+            OverWriteFile = $false
         }
         ProcessFilesCreatedInTheLastNumberOfDays = 1
     }

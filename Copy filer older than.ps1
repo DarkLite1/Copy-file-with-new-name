@@ -315,6 +315,7 @@ begin {
             $DestinationFolder = $jsonFileContent.Destination.Folder
             $Recurse = $jsonFileContent.Source.Recurse
             $Action = $jsonFileContent.Action
+            $OverWriteFile = $jsonFileContent.Destination.OverWriteFile
 
             #region Test .json file properties
             @(
@@ -338,7 +339,6 @@ begin {
                 throw "Action value '$Action' is not supported. Supported Action values are: 'copy' or 'move'."
             }
             #endregion
-
 
             #region Test integer value
             try {
@@ -366,6 +366,20 @@ begin {
             ) {
                 try {
                     $null = [Boolean]::Parse($jsonFileContent.Source.$boolean)
+                }
+                catch {
+                    throw "Property 'Source.$boolean' is not a boolean value"
+                }
+            }
+
+            foreach (
+                $boolean in
+                @(
+                    'OverWriteFile'
+                )
+            ) {
+                try {
+                    $null = [Boolean]::Parse($jsonFileContent.Destination.$boolean)
                 }
                 catch {
                     throw "Property 'Source.$boolean' is not a boolean value"
@@ -451,7 +465,7 @@ process {
                     $params = @{
                         LiteralPath = $file.FullName
                         Destination = "$($DestinationFolder)\$($file.Name)"
-                        Force       = $true
+                        Force       = $OverWriteFile
                     }
 
                     Write-Verbose "$Action file '$($params.LiteralPath)' to '$($params.Destination)'"
@@ -459,7 +473,8 @@ process {
                     if ($Action -eq 'copy') {
                         Copy-Item @params
 
-                    } else {
+                    }
+                    else {
                         Move-Item @params
                     }
                 }
