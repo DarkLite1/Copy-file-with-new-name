@@ -9,6 +9,10 @@
   },
   "ProcessFilesCreatedInTheLastNumberOfDays": 1,
   "?": {
+    "Source": {
+      "Recurse": "Value TRUE : search root folder and child folders for files. Value FALSE : search only in root folder for files",
+      "MatchFileNameRegex": "Value '*.*' : process all files. Value '*.xlsx' : process only Excel files."
+    },
     "ProcessFilesCreatedInTheLastNumberOfDays": "Value 0 : process all files in the source folder, no filter. Value 1 : process files created since yesterday morning. Value 5 : Process files created in the last 5 days. ..."
   }
 }
