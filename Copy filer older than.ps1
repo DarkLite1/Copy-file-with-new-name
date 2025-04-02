@@ -382,7 +382,7 @@ begin {
                     $null = [Boolean]::Parse($jsonFileContent.Destination.$boolean)
                 }
                 catch {
-                    throw "Property 'Source.$boolean' is not a boolean value"
+                    throw "Property 'Destination.$boolean' is not a boolean value"
                 }
             }
             #endregion
