@@ -6,8 +6,8 @@
   "Destination": {
     "Folder": "C:\\folderB"
   },
-  "ProcessFilesInThePastNumberOfDays": 1,
+  "ProcessFilesCreatedInTheLastNumberOfDays": 1,
   "?": {
-    "ProcessFilesInThePastNumberOfDays": "Value 0 : process all files in the source folder, no filter. Value 1 : process files created since yesterday morning. Value 5 : Process files created in the last 5 days. ..."
+    "ProcessFilesCreatedInTheLastNumberOfDays": "Value 0 : process all files in the source folder, no filter. Value 1 : process files created since yesterday morning. Value 5 : Process files created in the last 5 days. ..."
   }
 }
