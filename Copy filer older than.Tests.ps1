@@ -210,6 +210,21 @@ Describe 'create an error log file when' {
                     ($InputObject -like "*$ImportFile*Action value 'wrong' is not supported. Supported Action values are: 'copy' or 'move'.*")
                 }
             }
+            It "Source.Recurse is not a boolean" {
+                $testNewInputFile = Copy-ObjectHC $testInputFile
+                $testNewInputFile.Source.Recurse = 'wrong'
+
+                & $realCmdLet.OutFile @testOutParams -InputObject (
+                    $testNewInputFile | ConvertTo-Json -Depth 7
+                )
+
+                .$testScript @testParams
+
+                Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
+                    ($FilePath -like '* - Error.txt') -and
+                    ($InputObject -like "*$ImportFile*Property 'Source.Recurse' is not a boolean value*")
+                }
+            }
         }
     }
 }
