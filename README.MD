@@ -39,15 +39,19 @@ Create a `.json` file with the following structure:
 
 ```json
 {
-  "Action": "copy", // or "move"
-  "Source": {
-    "Folder": "C:\\Path\\To\\Source",
-    "Recurse": true, // or false
-    "MatchFileNameRegex": "*.csv" // e.g., "*.txt", "report_*.docx", "*.*"
-  },
-  "Destination": {
-    "Folder": "D:\\Path\\To\\Destination",
-    "OverWriteFile": false // or true
-  },
-  "ProcessFilesCreatedInTheLastNumberOfDays": 7 // 0 = process all, >0 = process files created in the last N days
+  "Tasks" : [
+    {
+      "Action": "copy", // or "move"
+      "ProcessFilesCreatedInTheLastNumberOfDays": 7, // 0 = process all, >0 = process files created in the last N days
+      "Source": {
+        "Folder": "C:\\Path\\To\\Source",
+        "Recurse": true, // or false
+        "MatchFileNameRegex": "*.csv" // e.g., "*.txt", "report_*.docx", "*.*"
+      },
+      "Destination": {
+        "Folder": "D:\\Path\\To\\Destination",
+        "OverWriteFile": false // or true
+      },
+    }
+  ]
 }

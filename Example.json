@@ -2,6 +2,7 @@
   "Tasks": [
     {
       "Action": "copy",
+      "ProcessFilesCreatedInTheLastNumberOfDays": 1,
       "Source": {
         "Folder": "C:\\folderA",
         "Recurse": true,
@@ -11,7 +12,6 @@
         "Folder": "C:\\folderB",
         "OverWriteFile": true
       },
-      "ProcessFilesCreatedInTheLastNumberOfDays": 1
     }
   ],
   "?": {
