@@ -448,24 +448,27 @@ process {
             try {
                 Write-Verbose "Processing file '$($file.FullName)'"
 
-                if ($Action -eq 'copy') {
-                    #region Copy file to destination folder
-                    try {
-                        $params = @{
-                            LiteralPath = $file.FullName
-                            Destination = "$($DestinationFolder)\$($file.Name)"
-                            Force       = $true
-                        }
+                #region Copy file to destination folder
+                try {
+                    $params = @{
+                        LiteralPath = $file.FullName
+                        Destination = "$($DestinationFolder)\$($file.Name)"
+                        Force       = $true
+                    }
 
-                        Write-Verbose "Copy file '$($params.LiteralPath)' to '$($params.Destination)'"
+                    Write-Verbose "$Action file '$($params.LiteralPath)' to '$($params.Destination)'"
 
+                    if ($Action -eq 'copy') {
                         Copy-Item @params
+
+                    } else {
+                        Move-Item @params
                     }
-                    catch {
-                        throw "Failed to copy file '$($params.LiteralPath)' to '$($params.Destination)': $_"
-                    }
-                    #endregion
                 }
+                catch {
+                    throw "Failed to $Action file '$($params.LiteralPath)' to '$($params.Destination)': $_"
+                }
+                #endregion
             }
             catch {
                 Write-Warning $_

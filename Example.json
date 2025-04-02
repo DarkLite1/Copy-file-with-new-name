@@ -1,5 +1,5 @@
 {
-  "Action": "COPY",
+  "Action": "copy",
   "Source": {
     "Folder": "C:\\folderA",
     "Recurse": true,
