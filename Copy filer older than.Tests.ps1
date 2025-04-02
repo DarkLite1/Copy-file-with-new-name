@@ -258,22 +258,30 @@ Describe 'when the source folder is empty' {
     }
 }
 Describe 'when there is a file in the source folder' {
-    It 'the file is copied to the destination folder' {
-        $testNewInputFile = Copy-ObjectHC $testInputFile
+    Context 'and Action is copy' {
+        BeforeAll {
+            $testNewInputFile = Copy-ObjectHC $testInputFile
 
-        $testNewInputFile.Source.Folder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
-        $testNewInputFile.Destination.Folder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
+            $testNewInputFile.Action = 'copy'
 
-        New-Item "$($testNewInputFile.Source.Folder)\Analyse_26032025.xlsx" -ItemType File
+            $testNewInputFile.Source.Folder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
+            $testNewInputFile.Destination.Folder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
 
-        & $realCmdLet.OutFile @testOutParams -InputObject (
-            $testNewInputFile | ConvertTo-Json -Depth 7
-        )
+            $testSourceFile = New-Item "$($testNewInputFile.Source.Folder)\Analyse_26032025.xlsx" -ItemType File
 
-        .$testScript @testParams
+            & $realCmdLet.OutFile @testOutParams -InputObject (
+                $testNewInputFile | ConvertTo-Json -Depth 7
+            )
 
-        Get-Item "$($testNewInputFile.Destination.Folder)\Analyse_26032025.xlsx" |
-        Should -Not -BeNullOrEmpty
+            .$testScript @testParams
+        }
+        It 'the file is copied to the destination folder' {
+            "$($testNewInputFile.Destination.Folder)\Analyse_26032025.xlsx" |
+            Should -Exist
+        }
+        It 'the source file is left untouched' {
+            $testSourceFile | Should -Exist
+        }
     }
 }
 Describe 'when a file fails to copy' {
