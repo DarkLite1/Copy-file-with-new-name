@@ -7,6 +7,7 @@ BeforeAll {
     }
 
     $testInputFile = @{
+        Action                                   = 'copy'
         Source                                   = @{
             Folder             = (New-Item 'TestDrive:/s' -ItemType Directory).FullName
             MatchFileNameRegex = 'Analyse_[0-9]{8}.xlsx'
@@ -161,6 +162,7 @@ Describe 'create an error log file when' {
                 }
                 It 'is missing' {
                     $testNewInputFile = @{
+                        Action      = 'copy'
                         Source      = $testInputFile.Source
                         Destination = $testInputFile.Destination
                     }

@@ -314,6 +314,7 @@ begin {
             $MatchFileNameRegex = $jsonFileContent.Source.MatchFileNameRegex
             $DestinationFolder = $jsonFileContent.Destination.Folder
             $Recurse = $jsonFileContent.Source.Recurse
+            $Action = $jsonFileContent.Action
 
             #region Test .json file properties
             @(
@@ -331,6 +332,13 @@ begin {
             ).foreach(
                 { throw "Property 'Destination.$_' not found" }
             )
+
+            #region Test Action value
+            if ($Action -notmatch '^copy$|^move$') {
+                throw "Action value '$Action' is not supported. Supported Action values are: 'copy' or 'move'."
+            }
+            #endregion
+
 
             #region Test integer value
             try {
@@ -440,22 +448,24 @@ process {
             try {
                 Write-Verbose "Processing file '$($file.FullName)'"
 
-                #region Copy file to destination folder
-                try {
-                    $params = @{
-                        LiteralPath = $file.FullName
-                        Destination = "$($DestinationFolder)\$($file.Name)"
-                        Force       = $true
+                if ($Action -eq 'copy') {
+                    #region Copy file to destination folder
+                    try {
+                        $params = @{
+                            LiteralPath = $file.FullName
+                            Destination = "$($DestinationFolder)\$($file.Name)"
+                            Force       = $true
+                        }
+
+                        Write-Verbose "Copy file '$($params.LiteralPath)' to '$($params.Destination)'"
+
+                        Copy-Item @params
                     }
-
-                    Write-Verbose "Copy file '$($params.LiteralPath)' to '$($params.Destination)'"
-
-                    Copy-Item @params
+                    catch {
+                        throw "Failed to copy file '$($params.LiteralPath)' to '$($params.Destination)': $_"
+                    }
+                    #endregion
                 }
-                catch {
-                    throw "Failed to copy file '$($params.LiteralPath)' to '$($params.Destination)': $_"
-                }
-                #endregion
             }
             catch {
                 Write-Warning $_

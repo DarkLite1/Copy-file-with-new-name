@@ -1,4 +1,5 @@
 {
+  "Action": "COPY",
   "Source": {
     "Folder": "C:\\folderA",
     "Recurse": true,
@@ -9,6 +10,7 @@
   },
   "ProcessFilesCreatedInTheLastNumberOfDays": 1,
   "?": {
+    "Action": "Value 'copy' : Copy files. Value 'move' : Move files. Value is not case sensitive",
     "Source": {
       "Recurse": "Value TRUE : search root folder and child folders for files. Value FALSE : search only in root folder for files",
       "MatchFileNameRegex": "Value '*.*' : process all files. Value '*.xlsx' : process only Excel files."
