@@ -7,14 +7,14 @@ BeforeAll {
     }
 
     $testInputFile = @{
-        Source                            = @{
-            Folder         = (New-Item 'TestDrive:/s' -ItemType Directory).FullName
+        Source                                   = @{
+            Folder             = (New-Item 'TestDrive:/s' -ItemType Directory).FullName
             MatchFileNameRegex = 'Analyse_[0-9]{8}.xlsx'
         }
-        Destination                       = @{
+        Destination                              = @{
             Folder = (New-Item 'TestDrive:/d' -ItemType Directory).FullName
         }
-        ProcessFilesInThePastNumberOfDays = 1
+        ProcessFilesCreatedInTheLastNumberOfDays = 1
     }
 
     $testOutParams = @{
@@ -112,10 +112,10 @@ Describe 'create an error log file when' {
                     ($InputObject -like "*$ImportFile*$_.Folder 'TestDrive:\nonExisting' not found*")
                 }
             }
-            Context 'ProcessFilesInThePastNumberOfDays' {
+            Context 'ProcessFilesCreatedInTheLastNumberOfDays' {
                 It 'is not a number' {
                     $testNewInputFile = Copy-ObjectHC $testInputFile
-                    $testNewInputFile.ProcessFilesInThePastNumberOfDays = 'a'
+                    $testNewInputFile.ProcessFilesCreatedInTheLastNumberOfDays = 'a'
 
                     & $realCmdLet.OutFile @testOutParams -InputObject (
                         $testNewInputFile | ConvertTo-Json -Depth 7
@@ -125,12 +125,12 @@ Describe 'create an error log file when' {
 
                     Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                         ($FilePath -like '* - Error.txt') -and
-                        ($InputObject -like "*$ImportFile*Property 'ProcessFilesInThePastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value 'a' is not supported*")
+                        ($InputObject -like "*$ImportFile*Property 'ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value 'a' is not supported*")
                     }
                 }
                 It 'is a negative number' {
                     $testNewInputFile = Copy-ObjectHC $testInputFile
-                    $testNewInputFile.ProcessFilesInThePastNumberOfDays = -1
+                    $testNewInputFile.ProcessFilesCreatedInTheLastNumberOfDays = -1
 
                     & $realCmdLet.OutFile @testOutParams -InputObject (
                         $testNewInputFile | ConvertTo-Json -Depth 7
@@ -140,12 +140,12 @@ Describe 'create an error log file when' {
 
                     Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                         ($FilePath -like '* - Error.txt') -and
-                        ($InputObject -like "*$ImportFile*Property 'ProcessFilesInThePastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '-1' is not supported*")
+                        ($InputObject -like "*$ImportFile*Property 'ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '-1' is not supported*")
                     }
                 }
                 It 'is an empty string' {
                     $testNewInputFile = Copy-ObjectHC $testInputFile
-                    $testNewInputFile.ProcessFilesInThePastNumberOfDays = ''
+                    $testNewInputFile.ProcessFilesCreatedInTheLastNumberOfDays = ''
 
                     & $realCmdLet.OutFile @testOutParams -InputObject (
                         $testNewInputFile | ConvertTo-Json -Depth 7
@@ -155,7 +155,7 @@ Describe 'create an error log file when' {
 
                     Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                         ($FilePath -like '* - Error.txt') -and
-                        ($InputObject -like "*$ImportFile*Property 'ProcessFilesInThePastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '' is not supported*")
+                        ($InputObject -like "*$ImportFile*Property 'ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '' is not supported*")
                     }
                 }
                 It 'is missing' {
@@ -172,12 +172,12 @@ Describe 'create an error log file when' {
 
                     Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                         ($FilePath -like '* - Error.txt') -and
-                        ($InputObject -like "*$ImportFile*Property 'ProcessFilesInThePastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '' is not supported*")
+                        ($InputObject -like "*$ImportFile*Property 'ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '' is not supported*")
                     }
                 }
                 It '0 is accepted' {
                     $testNewInputFile = Copy-ObjectHC $testInputFile
-                    $testNewInputFile.ProcessFilesInThePastNumberOfDays = '0'
+                    $testNewInputFile.ProcessFilesCreatedInTheLastNumberOfDays = '0'
 
                     & $realCmdLet.OutFile @testOutParams -InputObject (
                         $testNewInputFile | ConvertTo-Json -Depth 7
@@ -187,7 +187,7 @@ Describe 'create an error log file when' {
 
                     Should -Invoke -Not Out-File -ParameterFilter {
                         ($FilePath -like '* - Error.txt') -and
-                        ($InputObject -like "*ProcessFilesInThePastNumberOfDays*")
+                        ($InputObject -like "*ProcessFilesCreatedInTheLastNumberOfDays*")
                     }
                 }
             }

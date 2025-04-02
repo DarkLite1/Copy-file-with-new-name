@@ -8,7 +8,7 @@
     .DESCRIPTION
         This script selects all files in the source folder that match the
         'MatchFileNameRegex' and filters these based on the creation time
-        defined in 'ProcessFilesInThePastNumberOfDays'.
+        defined in 'ProcessFilesCreatedInTheLastNumberOfDays'.
 
         The selected files are copied from the source folder to the destination
         folder. Files with the same name in the destination folder are
@@ -31,8 +31,8 @@
     .PARAMETER DestinationFolder
         The destination folder.
 
-    .PARAMETER ProcessFilesInThePastNumberOfDays
-        Number of days in the past for which to process files.
+    .PARAMETER ProcessFilesCreatedInTheLastNumberOfDays
+        Process files that are created in the last x days.
 
         Example:
         - 0 : Process all files in the source folder, no filter
@@ -333,18 +333,18 @@ begin {
 
             #region Test integer value
             try {
-                if ($jsonFileContent.ProcessFilesInThePastNumberOfDays -eq '') {
+                if ($jsonFileContent.ProcessFilesCreatedInTheLastNumberOfDays -eq '') {
                     throw 'a blank string is not supported'
                 }
 
-                [int]$ProcessFilesInThePastNumberOfDays = $jsonFileContent.ProcessFilesInThePastNumberOfDays
+                [int]$ProcessFilesCreatedInTheLastNumberOfDays = $jsonFileContent.ProcessFilesCreatedInTheLastNumberOfDays
 
-                if ($jsonFileContent.ProcessFilesInThePastNumberOfDays -lt 0) {
+                if ($jsonFileContent.ProcessFilesCreatedInTheLastNumberOfDays -lt 0) {
                     throw 'a negative number is not supported'
                 }
             }
             catch {
-                throw "Property 'ProcessFilesInThePastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '$($jsonFileContent.ProcessFilesInThePastNumberOfDays)' is not supported."
+                throw "Property 'ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '$($jsonFileContent.ProcessFilesCreatedInTheLastNumberOfDays)' is not supported."
             }
             #endregion
             #endregion
@@ -398,12 +398,12 @@ process {
         #endregion
 
         #region Select files to process
-        if ($ProcessFilesInThePastNumberOfDays -eq 0) {
+        if ($ProcessFilesCreatedInTheLastNumberOfDays -eq 0) {
             $filesToProcess = $allSourceFiles
         }
         else {
             $compareDate = (Get-Date).AddDays(
-                - $ProcessFilesInThePastNumberOfDays
+                - $ProcessFilesCreatedInTheLastNumberOfDays
             ).Date
 
             $filesToProcess = $allSourceFiles.Where(
