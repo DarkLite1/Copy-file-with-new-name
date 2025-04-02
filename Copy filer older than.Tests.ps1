@@ -14,7 +14,8 @@ BeforeAll {
             Recurse            = $true
         }
         Destination                              = @{
-            Folder = (New-Item 'TestDrive:/d' -ItemType Directory).FullName
+            Folder        = (New-Item 'TestDrive:/d' -ItemType Directory).FullName
+            OverWriteFile = $true
         }
         ProcessFilesCreatedInTheLastNumberOfDays = 1
     }
