@@ -195,6 +195,21 @@ Describe 'create an error log file when' {
                     }
                 }
             }
+            It "Action is not value 'copy' or 'move'" {
+                $testNewInputFile = Copy-ObjectHC $testInputFile
+                $testNewInputFile.Action = 'wrong'
+
+                & $realCmdLet.OutFile @testOutParams -InputObject (
+                    $testNewInputFile | ConvertTo-Json -Depth 7
+                )
+
+                .$testScript @testParams
+
+                Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
+                    ($FilePath -like '* - Error.txt') -and
+                    ($InputObject -like "*$ImportFile*Action value 'wrong' is not supported. Supported Action values are: 'copy' or 'move'.*")
+                }
+            }
         }
     }
 }
