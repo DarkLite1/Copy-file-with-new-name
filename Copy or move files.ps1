@@ -65,7 +65,7 @@ param (
     [Parameter(Mandatory)]
     [string]$ImportFile,
     [string]$ScriptName = 'Process computer actions',
-    [string]$LogFolder = "$PSScriptRoot\..\Log"
+    [string]$LogFolder = "$PSScriptRoot\..\Errors"
 )
 
 begin {
