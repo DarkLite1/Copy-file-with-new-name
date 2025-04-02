@@ -10,6 +10,7 @@ BeforeAll {
         Source                                   = @{
             Folder             = (New-Item 'TestDrive:/s' -ItemType Directory).FullName
             MatchFileNameRegex = 'Analyse_[0-9]{8}.xlsx'
+            Recurse            = $true
         }
         Destination                              = @{
             Folder = (New-Item 'TestDrive:/d' -ItemType Directory).FullName

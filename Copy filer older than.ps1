@@ -313,6 +313,7 @@ begin {
             $SourceFolder = $jsonFileContent.Source.Folder
             $MatchFileNameRegex = $jsonFileContent.Source.MatchFileNameRegex
             $DestinationFolder = $jsonFileContent.Destination.Folder
+            $Recurse = $jsonFileContent.Source.Recurse
 
             #region Test .json file properties
             @(
@@ -345,6 +346,22 @@ begin {
             }
             catch {
                 throw "Property 'ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '$($jsonFileContent.ProcessFilesCreatedInTheLastNumberOfDays)' is not supported."
+            }
+            #endregion
+
+            #region Test boolean values
+            foreach (
+                $boolean in
+                @(
+                    'Recurse'
+                )
+            ) {
+                try {
+                    $null = [Boolean]::Parse($jsonFileContent.Source.$boolean)
+                }
+                catch {
+                    throw "Property 'Source.$boolean' is not a boolean value"
+                }
             }
             #endregion
             #endregion
@@ -383,7 +400,7 @@ process {
 
         $params = @{
             LiteralPath = $SourceFolder
-            Recurse     = $true
+            Recurse     = $Recurse
             File        = $true
         }
         $allSourceFiles = @(Get-ChildItem @params | Where-Object {

@@ -1,6 +1,7 @@
 {
   "Source": {
     "Folder": "C:\\folderA",
+    "Recurse": true,
     "MatchFileNameRegex": "Analyse_[0-9]{8}.xlsx"
   },
   "Destination": {
