@@ -446,8 +446,6 @@ process {
 
         foreach ($file in $filesToProcess) {
             try {
-                Write-Verbose "Processing file '$($file.FullName)'"
-
                 #region Copy file to destination folder
                 try {
                     $params = @{
