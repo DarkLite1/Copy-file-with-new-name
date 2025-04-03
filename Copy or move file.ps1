@@ -142,9 +142,9 @@ begin {
 
                 #region Test integer value
                 try {
-                    if ($task.ProcessFilesCreatedInTheLastNumberOfDays -eq '') {
-                        throw 'a blank string is not supported'
-                    }
+                    if ([string]::IsNullOrEmpty($task.ProcessFilesCreatedInTheLastNumberOfDays)) {
+						throw 'a blank string or null is not supported'
+					}
 
                     [int]$ProcessFilesCreatedInTheLastNumberOfDays = $task.ProcessFilesCreatedInTheLastNumberOfDays
 
