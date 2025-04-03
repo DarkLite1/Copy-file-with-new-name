@@ -40,8 +40,8 @@
         Only files that match the regex will be copied.
 
         Example:
-        - '.*'    : process all files.
-        - '*.xlsx' : process only Excel files.
+        - '.*'        : process all files.
+        - '.*\.xlsx$' : process only Excel files.
 
     .PARAMETER Task.Destination.Folder
         The destination folder.
