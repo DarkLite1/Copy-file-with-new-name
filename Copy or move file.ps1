@@ -75,14 +75,14 @@ begin {
     $ErrorActionPreference = 'stop'
 
     try {
-        $ScriptStartTime = Get-Date
+        $scriptStartTime = Get-Date
 
         #region Create log folder
         try {
             $logFolderItem = New-Item -Path $LogFolder -ItemType 'Directory' -Force -EA Stop
 
             $baseLogName = Join-Path -Path $logFolderItem.FullName -ChildPath (
-                '{0} - {1}' -f $ScriptStartTime.ToString('yyyy_MM_dd_HHmmss_dddd'), $ScriptName
+                '{0} - {1}' -f $scriptStartTime.ToString('yyyy_MM_dd_HHmmss_dddd'), $ScriptName
             )
 
             $logFile = '{0} - Error.txt' -f $baseLogName
