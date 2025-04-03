@@ -88,14 +88,16 @@ begin {
             $logFile = '{0} - Error.txt' -f $baseLogName
         }
         catch {
-            Write-Warning $_
+            Write-Warning "Failed creating the log folder '$LogFolder': $_"
 
-            $params = @{
-                FilePath = "$PSScriptRoot\..\Error.txt"
+            try {
+                "Failure:`r`n`r`n- Failed creating the log folder '$LogFolder': $_" | Out-File -FilePath "$PSScriptRoot\..\Error.txt"
             }
-            "Failure:`r`n`r`n- Failed creating the log folder '$LogFolder': $_" | Out-File @params
+            catch {
+                Write-Error "Critical error: Could not create log folder AND could not write fallback error file. Error: $_"
+            }
 
-            exit
+            exit 1
         }
         #endregion
 
@@ -209,7 +211,7 @@ begin {
     catch {
         Write-Warning $_
         "Failure:`r`n`r`n- $_" | Out-File -FilePath $logFile -Append
-        exit
+        exit 1
     }
 }
 
