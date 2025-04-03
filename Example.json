@@ -18,7 +18,7 @@
     "Action": "Value 'copy' : Copy files. Value 'move' : Move files. Value is not case sensitive",
     "Source": {
       "Recurse": "Value TRUE : search root folder and child folders for files. Value FALSE : search only in root folder for files",
-      "MatchFileNameRegex": "Value '*.*' : process all files. Value '*.xlsx' : process only Excel files."
+      "MatchFileNameRegex": "Value '.*' : process all files. Value '*.xlsx' : process only Excel files."
     },
     "Destination": {
       "OverWriteFile": "Value TRUE : overwrite duplicate files in the destination folder. Value FALSE : do not overwrite duplicate files in the destination folder and log an error"
