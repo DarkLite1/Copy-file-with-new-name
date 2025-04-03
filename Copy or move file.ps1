@@ -91,7 +91,8 @@ begin {
             Write-Warning "Failed creating the log folder '$LogFolder': $_"
 
             try {
-                "Failure:`r`n`r`n- Failed creating the log folder '$LogFolder': $_" | Out-File -FilePath "$PSScriptRoot\..\Error.txt"
+                "Failed creating the log folder '$LogFolder': $_" |
+                Out-File -FilePath "$PSScriptRoot\..\Error.txt"
             }
             catch {
                 Write-Warning "Failed creating fallback error file: $_"
