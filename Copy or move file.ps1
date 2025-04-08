@@ -240,7 +240,7 @@ process {
             )
 
             if (!$allSourceFiles) {
-                Write-Verbose 'No files found, exit script'
+                Write-Verbose 'No files found in source folder'
                 Continue
             }
             #endregion
@@ -262,7 +262,7 @@ process {
             Write-Verbose "Found $($filesToProcess.Count) file(s) to process"
 
             if (!$filesToProcess) {
-                Write-Verbose 'No files found, exit script'
+                Write-Verbose "Found $($allSourceFiles.Count) files in source folder, but none are more recent than $ProcessFilesCreatedInTheLastNumberOfDays days"
                 Continue
             }
             #endregion
