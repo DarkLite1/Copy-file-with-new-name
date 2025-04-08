@@ -241,7 +241,7 @@ process {
 
             if (!$allSourceFiles) {
                 Write-Verbose 'No files found, exit script'
-                exit
+                Continue
             }
             #endregion
 
@@ -263,7 +263,7 @@ process {
 
             if (!$filesToProcess) {
                 Write-Verbose 'No files found, exit script'
-                exit
+                Continue
             }
             #endregion
 
