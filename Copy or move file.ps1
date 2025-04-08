@@ -262,7 +262,7 @@ process {
             Write-Verbose "Found $($filesToProcess.Count) file(s) to process"
 
             if (!$filesToProcess) {
-                Write-Verbose "Found $($allSourceFiles.Count) files in source folder, but none are more recent than $ProcessFilesCreatedInTheLastNumberOfDays days"
+                Write-Verbose "Found $($allSourceFiles.Count) files in source folder, but no file has a creation date in the last  $ProcessFilesCreatedInTheLastNumberOfDays days"
                 Continue
             }
             #endregion
