@@ -253,7 +253,7 @@ process {
             }
             else {
                 $compareDate = (Get-Date).AddDays(
-                    - $ProcessFilesCreatedInTheLastNumberOfDays + 1
+                    - $ProcessFilesCreatedInTheLastNumberOfDays - 1
                 ).Date
 
                 $filesToProcess = $allSourceFiles.Where(
