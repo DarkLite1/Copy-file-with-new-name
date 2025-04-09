@@ -56,8 +56,9 @@
 
         Example:
         - 0 : Process all files in the source folder, no filter
-        - 1 : Process files created since yesterday morning
-        - 5 : Process files created in the last 5 days
+        - 1 : Process files created today
+        - 2 : Process files created since yesterday morning
+        - 5 : Process files created in the last 4 days
 
     .PARAMETER LogFolder
         The folder where the error log files will be saved.
@@ -143,8 +144,8 @@ begin {
                 #region Test integer value
                 try {
                     if ([string]::IsNullOrEmpty($task.ProcessFilesCreatedInTheLastNumberOfDays)) {
-						throw 'a blank string or null is not supported'
-					}
+                        throw 'a blank string or null is not supported'
+                    }
 
                     [int]$ProcessFilesCreatedInTheLastNumberOfDays = $task.ProcessFilesCreatedInTheLastNumberOfDays
 
@@ -241,17 +242,18 @@ process {
 
             if (!$allSourceFiles) {
                 Write-Verbose 'No files found in source folder'
-                Continue
+                continue
             }
             #endregion
 
             #region Select files to process
             if ($ProcessFilesCreatedInTheLastNumberOfDays -eq 0) {
+                Write-Verbose 'Process all files in source folder'
                 $filesToProcess = $allSourceFiles
             }
             else {
                 $compareDate = (Get-Date).AddDays(
-                    - $ProcessFilesCreatedInTheLastNumberOfDays
+                    - $ProcessFilesCreatedInTheLastNumberOfDays + 1
                 ).Date
 
                 $filesToProcess = $allSourceFiles.Where(
@@ -263,7 +265,7 @@ process {
 
             if (!$filesToProcess) {
                 Write-Verbose "Found $($allSourceFiles.Count) files in source folder, but no file has a creation date in the last  $ProcessFilesCreatedInTheLastNumberOfDays days"
-                Continue
+                continue
             }
             #endregion
 

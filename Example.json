@@ -23,6 +23,6 @@
     "Destination": {
       "OverWriteFile": "Value TRUE : overwrite duplicate files in the destination folder. Value FALSE : do not overwrite duplicate files in the destination folder and log an error"
     },
-    "ProcessFilesCreatedInTheLastNumberOfDays": "Value 0 : process all files in the source folder, no filter. Value 1 : process files created since yesterday morning. Value 5 : Process files created in the last 5 days. ..."
+    "ProcessFilesCreatedInTheLastNumberOfDays": "Value 0 : process all files in the source folder, no filter. Value 1 : process files created today. Value 2 : process files created since yesterday morning. Value 5 : Process files created in the last 4 days. ..."
   }
 }
