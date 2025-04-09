@@ -42,7 +42,7 @@ Create a `.json` file with the following structure:
   "Tasks" : [
     {
       "Action": "copy", // or "move"
-      "ProcessFilesCreatedInTheLastNumberOfDays": 7, // 0 = process all, >0 = process files created in the last N days
+      "ProcessFilesCreatedInTheLastNumberOfDays": 7, // 0 = process all, 1 = process files created today, >0 = process files created in the last N days
       "Source": {
         "Folder": "C:\\Path\\To\\Source",
         "Recurse": true, // or false
