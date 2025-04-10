@@ -256,6 +256,8 @@ process {
                     - ($ProcessFilesCreatedInTheLastNumberOfDays - 1)
                 ).Date
 
+                Write-Verbose "Process files created since '$compareDate'"
+
                 $filesToProcess = $allSourceFiles.Where(
                     { $_.CreationTime.Date -ge $compareDate }
                 )
