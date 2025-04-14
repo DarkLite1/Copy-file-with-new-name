@@ -188,22 +188,6 @@ begin {
                 }
                 #endregion
                 #endregion
-
-                #region Test folders exist
-                @{
-                    'Source.Folder'      = $task.Source.Folder
-                    'Destination.Folder' = $task.Destination.Folder
-                }.GetEnumerator().ForEach(
-                    {
-                        $key = $_.Key
-                        $value = $_.Value
-
-                        if (!(Test-Path -LiteralPath $value -PathType Container)) {
-                            throw "$key '$value' not found"
-                        }
-                    }
-                )
-                #endregion
             }
         }
         catch {
@@ -226,6 +210,22 @@ process {
             $Recurse = $task.Source.Recurse
             $DestinationFolder = $task.Destination.Folder
             $OverWriteFile = $task.Destination.OverWriteFile
+
+            #region Test folders exist
+            @{
+                'Source.Folder'      = $SourceFolder
+                'Destination.Folder' = $DestinationFolder
+            }.GetEnumerator().ForEach(
+                {
+                    $key = $_.Key
+                    $value = $_.Value
+
+                    if (!(Test-Path -LiteralPath $value -PathType Container)) {
+                        throw "$key '$value' not found"
+                    }
+                }
+            )
+            #endregion
 
             #region Get files from source folder
             Write-Verbose "Get all files in source folder '$SourceFolder'"
