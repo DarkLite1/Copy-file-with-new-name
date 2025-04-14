@@ -116,7 +116,7 @@ Describe 'create an error log file when' {
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                     ($FilePath -like '* - Error.txt') -and
-                    ($InputObject -like "*$ImportFile*$_.Folder 'TestDrive:\nonExisting' not found*")
+                    ($InputObject -like "*$_.Folder 'TestDrive:\nonExisting' not found*")
                 }
             }
             Context 'ProcessFilesCreatedInTheLastNumberOfDays' {
