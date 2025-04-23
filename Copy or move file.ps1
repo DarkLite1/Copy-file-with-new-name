@@ -131,7 +131,7 @@ begin {
 
             #region Test Action value
             if ($task.Action -notmatch '^copy$|^move$') {
-                throw "Action value '$($task.Action)' is not supported. Supported Action values are: 'copy' or 'move'."
+                throw "'Tasks.Action' value '$($task.Action)' is not supported. Supported Action values are: 'copy' or 'move'."
             }
             #endregion
 
@@ -148,7 +148,7 @@ begin {
                 }
             }
             catch {
-                throw "Property 'ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '$($task.ProcessFilesCreatedInTheLastNumberOfDays)' is not supported."
+                throw "Property 'Tasks.ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '$($task.ProcessFilesCreatedInTheLastNumberOfDays)' is not supported."
             }
             #endregion
 
@@ -163,7 +163,7 @@ begin {
                     $null = [Boolean]::Parse($task.Source.$boolean)
                 }
                 catch {
-                    throw "Property 'Source.$boolean' is not a boolean value"
+                    throw "Property 'Tasks.Source.$boolean' is not a boolean value"
                 }
             }
 
@@ -177,7 +177,7 @@ begin {
                     $null = [Boolean]::Parse($task.Destination.$boolean)
                 }
                 catch {
-                    throw "Property 'Destination.$boolean' is not a boolean value"
+                    throw "Property 'Tasks.Destination.$boolean' is not a boolean value"
                 }
             }
             #endregion
