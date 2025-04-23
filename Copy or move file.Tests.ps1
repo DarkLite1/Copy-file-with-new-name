@@ -205,7 +205,7 @@ Describe 'create an error log file when' {
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                     ($LiteralPath -like '* - Errors.json') -and
-                    ($InputObject -like "*Property 'Source.$_' not found*")
+                    ($InputObject -like "*Property 'Tasks.Source.$_' not found*")
                 }
             }
             It 'Tasks.Destination.<_> not found' -ForEach @(
@@ -226,7 +226,7 @@ Describe 'create an error log file when' {
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                     ($LiteralPath -like '* - Errors.json') -and
-                    ($InputObject -like "*Property 'Destination.$_' not found*")
+                    ($InputObject -like "*Property 'Tasks.Destination.$_' not found*")
                 }
             }
             Context 'ProcessFilesCreatedInTheLastNumberOfDays' {

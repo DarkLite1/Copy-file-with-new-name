@@ -118,7 +118,7 @@ begin {
             ).where(
                 { -not $task.Source.$_ }
             ).foreach(
-                { throw "Property 'Source.$_' not found" }
+                { throw "Property 'Tasks.Source.$_' not found" }
             )
 
             @(
@@ -126,7 +126,7 @@ begin {
             ).where(
                 { -not $task.Destination.$_ }
             ).foreach(
-                { throw "Property 'Destination.$_' not found" }
+                { throw "Property 'Tasks.Destination.$_' not found" }
             )
 
             #region Test Action value
