@@ -240,7 +240,7 @@ Describe 'create an error log file when' {
                         ($LiteralPath -like '* - Errors.json') -and
                         ($InputObject -like "*$($testParams.ConfigurationJsonFile.replace('\','\\'))*Property 'Tasks.ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value 'a' is not supported*")
                     }
-                } -Tag test
+                }
                 It 'is a negative number' {
                     $testNewInputFile = Copy-ObjectHC $testInputFile
                     $testNewInputFile.Tasks[0].ProcessFilesCreatedInTheLastNumberOfDays = -1
@@ -253,9 +253,9 @@ Describe 'create an error log file when' {
 
                     Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                         ($LiteralPath -like '* - Errors.json') -and
-                        ($InputObject -like "*$($testParams.ConfigurationJsonFile.replace('\','\\')))*Property 'ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '-1' is not supported*")
+                        ($InputObject -like "*$($testParams.ConfigurationJsonFile.replace('\','\\'))*Property 'Tasks.ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '-1' is not supported*")
                     }
-                }
+                } -Tag test
                 It 'is an empty string' {
                     $testNewInputFile = Copy-ObjectHC $testInputFile
                     $testNewInputFile.Tasks[0].ProcessFilesCreatedInTheLastNumberOfDays = ''
@@ -268,7 +268,7 @@ Describe 'create an error log file when' {
 
                     Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                         ($LiteralPath -like '* - Errors.json') -and
-                        ($InputObject -like "*$($testParams.ConfigurationJsonFile.replace('\','\\')))*Property 'ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '' is not supported*")
+                        ($InputObject -like "*$($testParams.ConfigurationJsonFile.replace('\','\\'))*Property 'ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '' is not supported*")
                     }
                 }
                 It 'is missing' {
@@ -290,7 +290,7 @@ Describe 'create an error log file when' {
 
                     Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                         ($LiteralPath -like '* - Errors.json') -and
-                        ($InputObject -like "*$($testParams.ConfigurationJsonFile.replace('\','\\')))*Property 'ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '' is not supported*")
+                        ($InputObject -like "*$($testParams.ConfigurationJsonFile.replace('\','\\'))*Property 'ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '' is not supported*")
                     }
                 }
                 It '0 is accepted' {
@@ -321,7 +321,7 @@ Describe 'create an error log file when' {
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                     ($LiteralPath -like '* - Errors.json') -and
-                    ($InputObject -like "*$($testParams.ConfigurationJsonFile.replace('\','\\')))*'Tasks.Action' value 'wrong' is not supported. Supported Action values are: 'copy' or 'move'.*")
+                    ($InputObject -like "*$($testParams.ConfigurationJsonFile.replace('\','\\'))*'Tasks.Action' value 'wrong' is not supported. Supported Action values are: 'copy' or 'move'.*")
                 }
             }
             It "Tasks.Source.Recurse is not a boolean" {
@@ -336,7 +336,7 @@ Describe 'create an error log file when' {
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                     ($LiteralPath -like '* - Errors.json') -and
-                    ($InputObject -like "*$($testParams.ConfigurationJsonFile.replace('\','\\')))*Property 'Tasks.Source.Recurse' is not a boolean value*")
+                    ($InputObject -like "*$($testParams.ConfigurationJsonFile.replace('\','\\'))*Property 'Tasks.Source.Recurse' is not a boolean value*")
                 }
             }
             It "Tasks.Destination.OverWriteFile is not a boolean" {
@@ -351,7 +351,7 @@ Describe 'create an error log file when' {
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                     ($LiteralPath -like '* - Errors.json') -and
-                    ($InputObject -like "*$($testParams.ConfigurationJsonFile.replace('\','\\')))*Property 'Tasks.Destination.OverWriteFile' is not a boolean value*")
+                    ($InputObject -like "*$($testParams.ConfigurationJsonFile.replace('\','\\'))*Property 'Tasks.Destination.OverWriteFile' is not a boolean value*")
                 }
             }
         }
