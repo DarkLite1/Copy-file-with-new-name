@@ -7,7 +7,7 @@ BeforeAll {
     }
 
     $testInputFile = @{
-        Tasks = @(
+        Tasks    = @(
             @{
                 Action                                   = 'copy'
                 Source                                   = @{
@@ -22,6 +22,43 @@ BeforeAll {
                 ProcessFilesCreatedInTheLastNumberOfDays = 1
             }
         )
+        Settings = @{
+            ScriptName     = 'Test (Brecht)'
+            SendMail       = @{
+                When         = 'Always'
+                From         = 'm@example.com'
+                To           = '007@example.com'
+                Subject      = 'Email subject'
+                Body         = 'Email body'
+                Smtp         = @{
+                    ServerName     = 'SMTP_SERVER'
+                    Port           = 25
+                    ConnectionType = 'StartTls'
+                    UserName       = 'bob'
+                    Password       = 'pass'
+                }
+                AssemblyPath = @{
+                    MailKit = 'C:\Program Files\PackageManagement\NuGet\Packages\MailKit.4.11.0\lib\net8.0\MailKit.dll'
+                    MimeKit = 'C:\Program Files\PackageManagement\NuGet\Packages\MimeKit.4.11.0\lib\net8.0\MimeKit.dll'
+                }
+            }
+            SaveLogFiles   = @{
+                What                = @{
+                    SystemErrors     = $true
+                    AllActions       = $true
+                    OnlyActionErrors = $false
+                }
+                Where               = @{
+                    Folder         = (New-Item 'TestDrive:/log' -ItemType Directory).FullName
+                    FileExtensions = @('.json', '.csv')
+                }
+                deleteLogsAfterDays = 1
+            }
+            SaveInEventLog = @{
+                Save    = $true
+                LogName = 'Scripts'
+            }
+        }
     }
 
     $testOutParams = @{
@@ -30,47 +67,131 @@ BeforeAll {
 
     $testScript = $PSCommandPath.Replace('.Tests.ps1', '.ps1')
     $testParams = @{
-        ScriptName = 'Test (Brecht)'
-        ImportFile = $testOutParams.FilePath
-        LogFolder  = New-Item 'TestDrive:/log' -ItemType Directory
+        ConfigurationJsonFile = $testOutParams.FilePath
     }
 
+    Function Copy-ObjectHC {
+        <#
+        .SYNOPSIS
+            Make a deep copy of an object using JSON serialization.
+
+        .DESCRIPTION
+            Uses ConvertTo-Json and ConvertFrom-Json to create an independent
+            copy of an object. This method is generally effective for objects
+            that can be represented in JSON format.
+
+        .PARAMETER InputObject
+            The object to copy.
+
+        .EXAMPLE
+            $newArray = Copy-ObjectHC -InputObject $originalArray
+        #>
+        [CmdletBinding()]
+        Param (
+            [Parameter(Mandatory)]
+            [Object]$InputObject
+        )
+
+        $jsonString = $InputObject | ConvertTo-Json -Depth 100
+
+        $deepCopy = $jsonString | ConvertFrom-Json
+
+        return $deepCopy
+    }
+    function Send-MailKitMessageHC {
+        param (
+            [parameter(Mandatory)]
+            [string]$MailKitAssemblyPath,
+            [parameter(Mandatory)]
+            [string]$MimeKitAssemblyPath,
+            [parameter(Mandatory)]
+            [string]$SmtpServerName,
+            [parameter(Mandatory)]
+            [ValidateSet(25, 465, 587, 2525)]
+            [int]$SmtpPort,
+            [parameter(Mandatory)]
+            [ValidatePattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')]
+            [string]$From,
+            [parameter(Mandatory)]
+            [string]$Body,
+            [parameter(Mandatory)]
+            [string]$Subject,
+            [string[]]$To,
+            [string[]]$Bcc,
+            [int]$MaxAttachmentSize = 20MB,
+            [ValidateSet(
+                'None', 'Auto', 'SslOnConnect', 'StartTls', 'StartTlsWhenAvailable'
+            )]
+            [string]$SmtpConnectionType = 'None',
+            [ValidateSet('Normal', 'Low', 'High')]
+            [string]$Priority = 'Normal',
+            [string[]]$Attachments,
+            [PSCredential]$Credential
+        )
+    }
+
+    Mock Send-MailKitMessageHC
+    Mock New-EventLog
+    Mock Write-EventLog
     Mock Out-File
 }
 Describe 'the mandatory parameters are' {
-    It '<_>' -ForEach @('ImportFile') {
+    It '<_>' -ForEach @('ConfigurationJsonFile') {
         (Get-Command $testScript).Parameters[$_].Attributes.Mandatory |
         Should -BeTrue
     }
 }
 Describe 'create an error log file when' {
     It 'the log folder cannot be created' {
-        $testNewParams = $testParams.clone()
-        $testNewParams.LogFolder = 'xxx:://notExistingLocation'
+        $testNewInputFile = Copy-ObjectHC $testInputFile
+        $testNewInputFile.Settings.SaveLogFiles.Where.Folder = 'x:\notExistingLocation'
 
-        .$testScript @testNewParams
+        & $realCmdLet.OutFile @testOutParams -InputObject (
+            $testNewInputFile | ConvertTo-Json -Depth 7
+        )
 
-        Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-            ($FilePath -like '*\Error.txt') -and
-            ($InputObject -like '*Failed creating the log folder*')
-        }
+        .$testScript @testParams
+
+        $LASTEXITCODE | Should -Be 1
+
+        Should -Not -Invoke Out-File
     }
     Context 'the ImportFile' {
         It 'is not found' {
             $testNewParams = $testParams.clone()
-            $testNewParams.ImportFile = 'nonExisting.json'
+            $testNewParams.ConfigurationJsonFile = 'nonExisting.json'
 
             .$testScript @testNewParams
 
-            Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                ($FilePath -like '* - Error.txt') -and
-                ($InputObject -like '*Cannot find path*nonExisting.json*')
-            }
+            $LASTEXITCODE | Should -Be 1
+
+            Should -Not -Invoke Out-File
         }
         Context 'property' {
-            It '<_> not found' -ForEach @(
+            It 'Tasks.<_> not found' -ForEach @(
+                'Action', 'Source', 'Destination'
+            ) {
+                $testNewInputFile = Copy-ObjectHC $testInputFile
+                $testNewInputFile.Tasks[0].$_ = $null
+
+                & $realCmdLet.OutFile @testOutParams -InputObject (
+                    $testNewInputFile | ConvertTo-Json -Depth 7
+                )
+
+                .$testScript @testParams
+
+                $LASTEXITCODE | Should -Be 1
+
+                Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
+                    ($LiteralPath -like '* - Errors.json') -and
+                    ($InputObject -like "*Property 'Tasks.$_' not found*")
+                }
+            } -Tag test
+            It 'Tasks.Source.<_> not found' -ForEach @(
                 'Folder', 'MatchFileNameRegex'
             ) {
+                Mock Out-File
+
                 $testNewInputFile = Copy-ObjectHC $testInputFile
                 $testNewInputFile.Tasks[0].Source.$_ = $null
 
@@ -80,14 +201,18 @@ Describe 'create an error log file when' {
 
                 .$testScript @testParams
 
+                $LASTEXITCODE | Should -Be 1
+
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                    ($FilePath -like '* - Error.txt') -and
-                    ($InputObject -like "*$ImportFile*Property 'Source.$_' not found*")
+                    ($LiteralPath -like '* - Errors.json') -and
+                    ($InputObject -like "*Property 'Source.$_' not found*")
                 }
             }
-            It '<_> not found' -ForEach @(
+            It 'Tasks.Destination.<_> not found' -ForEach @(
                 'Folder'
             ) {
+                Mock Out-File
+
                 $testNewInputFile = Copy-ObjectHC $testInputFile
                 $testNewInputFile.Tasks[0].Destination.$_ = $null
 
@@ -97,26 +222,11 @@ Describe 'create an error log file when' {
 
                 .$testScript @testParams
 
-                Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                    ($FilePath -like '* - Error.txt') -and
-                    ($InputObject -like "*$ImportFile*Property 'Destination.$_' not found*")
-                }
-            }
-            It 'Folder <_> not found' -ForEach @(
-                'Source', 'Destination'
-            ) {
-                $testNewInputFile = Copy-ObjectHC $testInputFile
-                $testNewInputFile.Tasks[0].$_['Folder'] = 'TestDrive:\nonExisting'
-
-                & $realCmdLet.OutFile @testOutParams -InputObject (
-                    $testNewInputFile | ConvertTo-Json -Depth 7
-                )
-
-                .$testScript @testParams
+                $LASTEXITCODE | Should -Be 1
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                    ($FilePath -like '* - Error.txt') -and
-                    ($InputObject -like "*$_.Folder 'TestDrive:\nonExisting' not found*")
+                    ($LiteralPath -like '* - Errors.json') -and
+                    ($InputObject -like "*Property 'Destination.$_' not found*")
                 }
             }
             Context 'ProcessFilesCreatedInTheLastNumberOfDays' {
