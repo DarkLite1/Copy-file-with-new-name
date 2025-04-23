@@ -186,12 +186,10 @@ Describe 'create an error log file when' {
                     ($LiteralPath -like '* - Errors.json') -and
                     ($InputObject -like "*Property 'Tasks.$_' not found*")
                 }
-            } -Tag test
+            }
             It 'Tasks.Source.<_> not found' -ForEach @(
                 'Folder', 'MatchFileNameRegex'
             ) {
-                Mock Out-File
-
                 $testNewInputFile = Copy-ObjectHC $testInputFile
                 $testNewInputFile.Tasks[0].Source.$_ = $null
 
@@ -211,8 +209,6 @@ Describe 'create an error log file when' {
             It 'Tasks.Destination.<_> not found' -ForEach @(
                 'Folder'
             ) {
-                Mock Out-File
-
                 $testNewInputFile = Copy-ObjectHC $testInputFile
                 $testNewInputFile.Tasks[0].Destination.$_ = $null
 
