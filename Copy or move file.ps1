@@ -236,6 +236,22 @@ begin {
             #endregion
         }
         #endregion
+
+        #region Set MaxConcurrentTasks
+        try {
+            [int]$MaxConcurrentTasks = $jsonFileContent.MaxConcurrentTasks
+        }
+        catch {
+            Write-Warning "Property 'MaxConcurrentTasks' is not a positive number, the value '$($jsonFileContent.MaxConcurrentTasks)' is not supported."
+        }
+
+        if ($MaxConcurrentTasks -lt 1) {
+            Write-Verbose "Set 'MaxConcurrentTasks' to default value '1'"
+            $MaxConcurrentTasks = 1
+        }
+
+        Write-Verbose "MaxConcurrentTasks '$MaxConcurrentTasks'"
+        #endregion
     }
     catch {
         $systemErrors += [PSCustomObject]@{

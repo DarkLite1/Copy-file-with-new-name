@@ -55,7 +55,7 @@
     }
   },
   "?": {
-    "MaxConcurrentTasks": "(Optional) Maximum number of tasks to run in parallel. Default value: 1. Value 0 : run all tasks in parallel.",
+    "MaxConcurrentTasks": "(Optional) Maximum number of tasks to run in parallel. Possible values: 1 - Run one task at a time, this is the default; 5 - Run 5 tasks in parallel; 10 - Run 10 tasks in parallel; ...",
     "Tasks": [
       {
         "Action": "(Mandatory) Specifies whether to copy or move files. Possible values: 'copy' - Copy files; 'move' - Move files. Value is not case sensitive.",

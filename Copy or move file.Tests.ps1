@@ -7,7 +7,8 @@ BeforeAll {
     }
 
     $testInputFile = @{
-        Tasks    = @(
+        MaxConcurrentTasks = 1
+        Tasks              = @(
             @{
                 Action                                   = 'copy'
                 Source                                   = @{
@@ -22,7 +23,7 @@ BeforeAll {
                 ProcessFilesCreatedInTheLastNumberOfDays = 1
             }
         )
-        Settings = @{
+        Settings           = @{
             ScriptName     = 'Test (Brecht)'
             SendMail       = @{
                 When         = 'Always'
