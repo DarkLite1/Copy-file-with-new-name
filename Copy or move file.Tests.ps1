@@ -385,7 +385,7 @@ Describe 'when there is a file in the source folder' {
         It 'the file is copied to the destination folder' {
             "$($testNewInputFile.Tasks[0].Destination.Folder)\Analyse_26032025.xlsx" |
             Should -Exist
-        }
+        } -Tag test
         It 'the source file is left untouched' {
             $testSourceFile | Should -Exist
         }

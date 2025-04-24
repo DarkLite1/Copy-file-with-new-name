@@ -71,6 +71,59 @@ param (
 )
 
 begin {
+    function Start-RetryActionHC {
+        <#
+            .SYNOPSIS
+                Run a CmdLet multiple times.
+
+            .DESCRIPTION
+                This is useful for cases where a file is locked.
+        #>
+        [CmdletBinding()]
+        param (
+            [Parameter(Mandatory)]
+            [scriptblock]$ScriptBlock,
+            [ValidateRange(1, 25)]
+            [int]$AttemptCount = 5,
+            [ValidateRange(1, 30)]
+            [int]$WaitSecondsBetweenAttempts = 3
+        )
+
+        $attempt = @{
+            count   = 0
+            success = $false
+        }
+
+        while (
+            (-not $attempt.success) -and
+            ($attempt.count -lt $AttemptCount)
+        ) {
+            try {
+                $attempt.count++
+                Write-Verbose "Attempt $($attempt.count)/$AttemptCount"
+
+                & $ScriptBlock -ErrorAction 'Stop'
+
+                $attempt.success = $true
+            }
+            catch {
+                if ($attempt.count -lt $AttemptCount) {
+                    Write-Warning "Attempt $($attempt.count)/$AttemptCount failed, wait $WaitSecondsBetweenAttempts seconds"
+                    Start-Sleep -Seconds $WaitSecondsBetweenAttempts
+                }
+                else {
+                    Write-Warning "Attempt $($attempt.count)/$AttemptCount failed: $_"
+                }
+                $errorMessage = $_
+                $Error.RemoveAt(0)
+            }
+        }
+
+        if (-not $attempt.success) {
+            throw $errorMessage
+        }
+    }
+
     $ErrorActionPreference = 'stop'
 
     $systemErrors = @()
@@ -307,11 +360,13 @@ process {
 
                     Write-Verbose "$Action file '$($params.LiteralPath)' to '$($params.Destination)'"
 
-                    if ($Action -eq 'copy') {
-                        Copy-Item @params
-                    }
-                    else {
-                        Move-Item @params
+                    Start-RetryActionHC {
+                        if ($Action -eq 'copy') {
+                            Copy-Item @params
+                        }
+                        else {
+                            Move-Item @params
+                        }
                     }
 
                     $result.Success = $true
