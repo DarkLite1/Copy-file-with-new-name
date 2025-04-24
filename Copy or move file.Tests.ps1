@@ -440,5 +440,5 @@ Describe 'when a file fails to copy' {
             ($LiteralPath -like '* - Actions with errors.json') -and
             ($InputObject -like "*$($testFile.FullName.Replace('\','\\'))*Oops*")
         }
-    } -Tag test
+    }
 }
