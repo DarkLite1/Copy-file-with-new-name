@@ -255,7 +255,7 @@ Describe 'create an error log file when' {
                         ($LiteralPath -like '* - Errors.json') -and
                         ($InputObject -like "*$($testParams.ConfigurationJsonFile.replace('\','\\'))*Property 'Tasks.ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '-1' is not supported*")
                     }
-                } -Tag test
+                }
                 It 'is an empty string' {
                     $testNewInputFile = Copy-ObjectHC $testInputFile
                     $testNewInputFile.Tasks[0].ProcessFilesCreatedInTheLastNumberOfDays = ''
@@ -268,19 +268,12 @@ Describe 'create an error log file when' {
 
                     Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                         ($LiteralPath -like '* - Errors.json') -and
-                        ($InputObject -like "*$($testParams.ConfigurationJsonFile.replace('\','\\'))*Property 'ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '' is not supported*")
+                        ($InputObject -like "*$($testParams.ConfigurationJsonFile.replace('\','\\'))*Property 'Tasks.ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '' is not supported*")
                     }
                 }
                 It 'is missing' {
-                    $testNewInputFile = @{
-                        Tasks = @(
-                            @{
-                                Action      = 'copy'
-                                Source      = $testInputFile.Tasks[0].Source
-                                Destination = $testInputFile.Tasks[0].Destination
-                            }
-                        )
-                    }
+                    $testNewInputFile = Copy-ObjectHC $testInputFile
+                    $testNewInputFile.Tasks[0].ProcessFilesCreatedInTheLastNumberOfDays = $null
 
                     & $realCmdLet.OutFile @testOutParams -InputObject (
                         $testNewInputFile | ConvertTo-Json -Depth 7
@@ -290,7 +283,7 @@ Describe 'create an error log file when' {
 
                     Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                         ($LiteralPath -like '* - Errors.json') -and
-                        ($InputObject -like "*$($testParams.ConfigurationJsonFile.replace('\','\\'))*Property 'ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '' is not supported*")
+                        ($InputObject -like "*$($testParams.ConfigurationJsonFile.replace('\','\\'))*Property 'Tasks.ProcessFilesCreatedInTheLastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '' is not supported*")
                     }
                 }
                 It '0 is accepted' {
@@ -444,8 +437,8 @@ Describe 'when a file fails to copy' {
     }
     It 'an error log file is created' {
         Should -Invoke Out-File -Times 1 -Exactly -Scope Describe -ParameterFilter {
-            ($LiteralPath -like '* - Errors.json') -and
-            ($InputObject -like "*Failed to copy file '$($testFile.FullName)'*Oops*")
+            ($LiteralPath -like '* - Actions with errors.json') -and
+            ($InputObject -like "*$($testFile.FullName.Replace('\','\\'))*Oops*")
         }
-    }
+    } -Tag test
 }
