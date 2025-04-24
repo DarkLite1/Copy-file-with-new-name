@@ -1,4 +1,5 @@
 {
+  "MaxConcurrentTasks": 1,
   "Tasks": [
     {
       "Action": "copy",
@@ -54,17 +55,22 @@
     }
   },
   "?": {
-    "Action": "Value 'copy' : Copy files. Value 'move' : Move files. Value is not case sensitive",
-    "Source": {
-      "Recurse": "Value TRUE : search root folder and child folders for files. Value FALSE : search only in root folder for files",
-      "MatchFileNameRegex": "Value '.*' : process all files. Value '.*\\.xlsx$' (with single slash, incorrect here because of .json syntax) : process only Excel files."
-    },
-    "Destination": {
-      "OverWriteFile": "Value TRUE : overwrite duplicate files in the destination folder. Value FALSE : do not overwrite duplicate files in the destination folder and log an error"
-    },
-    "ProcessFilesCreatedInTheLastNumberOfDays": "Value 0 : process all files in the source folder, no filter. Value 1 : process files created today. Value 2 : process files created since yesterday morning. Value 5 : Process files created in the last 4 days. ...",
+    "MaxConcurrentTasks": "(Optional) Maximum number of tasks to run in parallel. Default value: 1. Value 0 : run all tasks in parallel.",
+    "Tasks": [
+      {
+        "Action": "(Mandatory) Specifies whether to copy or move files. Possible values: 'copy' - Copy files; 'move' - Move files. Value is not case sensitive.",
+        "Source": {
+          "Recurse": "(Mandatory) Specifies whether to search for files in the root folder only or in the root folder and all child folders. Possible values: 'true' - Search only in the root folder; 'false' - Search in the root folder and all child folders.",
+          "MatchFileNameRegex": "(Mandatory) A regular expression to match file names. Value '.*' : process all files. Value '.*\\.xlsx$' : process only Excel files."
+        },
+        "Destination": {
+          "OverWriteFile": "(Mandatory) Specifies whether to overwrite duplicate files in the destination folder. Possible values: true - Overwrite duplicate files; false - Do not overwrite duplicate files and log an error."
+        },
+        "ProcessFilesCreatedInTheLastNumberOfDays": "(Mandatory) Specifies the number of days back to consider file creation time for processing. Value 0 : process all files in the source folder, no filter. Value 1 : process files created today. Value 2 : process files created since yesterday morning. Value 5 : process files created in the last 4 days. ..."
+      }
+    ],
     "Settings": {
-      "ScriptName": "(Mandatory) Name of the script, used in the log files and in the event logs",
+      "ScriptName": "(Mandatory) Name of the script, used in the log files and in the event logs.",
       "SendMail": {
         "When": "(Mandatory) Specifies when to send an email notification. Possible values: 'OnError' - Send email only when a system error or an action error occurs; 'OnErrorOrAction' - Send email when the script performed actions or when errors occurred; 'Always' - Send email when the script is finished, regardless of success or failure; 'Never' - Do not send email.",
         "From": "(Mandatory) The sender's email address. Supports environment variables (e.g., 'ENV:MAIL_FROM_ADDRESS').",
