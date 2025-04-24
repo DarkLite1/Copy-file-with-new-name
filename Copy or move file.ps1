@@ -71,64 +71,11 @@ param (
 )
 
 begin {
-    function Start-RetryActionHC {
-        <#
-            .SYNOPSIS
-                Run a CmdLet multiple times.
-
-            .DESCRIPTION
-                This is useful for cases where a file is locked.
-        #>
-        [CmdletBinding()]
-        param (
-            [Parameter(Mandatory)]
-            [scriptblock]$ScriptBlock,
-            [ValidateRange(1, 25)]
-            [int]$AttemptCount = 5,
-            [ValidateRange(1, 30)]
-            [int]$WaitSecondsBetweenAttempts = 3
-        )
-
-        $attempt = @{
-            count   = 0
-            success = $false
-        }
-
-        while (
-            (-not $attempt.success) -and
-            ($attempt.count -lt $AttemptCount)
-        ) {
-            try {
-                $attempt.count++
-                Write-Verbose "Attempt $($attempt.count)/$AttemptCount"
-
-                & $ScriptBlock -ErrorAction 'Stop'
-
-                $attempt.success = $true
-            }
-            catch {
-                if ($attempt.count -lt $AttemptCount) {
-                    Write-Warning "Attempt $($attempt.count)/$AttemptCount failed, wait $WaitSecondsBetweenAttempts seconds"
-                    Start-Sleep -Seconds $WaitSecondsBetweenAttempts
-                }
-                else {
-                    Write-Warning "Attempt $($attempt.count)/$AttemptCount failed: $_"
-                }
-                $errorMessage = $_
-                $Error.RemoveAt(0)
-            }
-        }
-
-        if (-not $attempt.success) {
-            throw $errorMessage
-        }
-    }
-
     $ErrorActionPreference = 'stop'
 
-    $systemErrors = @()
-    $logFileData = [System.Collections.Generic.List[PSObject]]::new()
     $eventLogData = [System.Collections.Generic.List[PSObject]]::new()
+    $logFileData = [System.Collections.Generic.List[PSObject]]::new()
+    $systemErrors = [System.Collections.Generic.List[PSObject]]::new()
     $scriptStartTime = Get-Date
 
     try {
@@ -158,6 +105,7 @@ begin {
         }
 
         foreach ($task in $Tasks) {
+            #region Test mandatory properties
             @(
                 'Action', 'Source', 'Destination'
             ).where(
@@ -181,6 +129,7 @@ begin {
             ).foreach(
                 { throw "Property 'Tasks.Destination.$_' not found" }
             )
+            #endregion
 
             #region Test Action value
             if ($task.Action -notmatch '^copy$|^move$') {
@@ -194,7 +143,7 @@ begin {
                     throw 'a blank string or null is not supported'
                 }
 
-                [int]$ProcessFilesCreatedInTheLastNumberOfDays = $task.ProcessFilesCreatedInTheLastNumberOfDays
+                [int]$task.ProcessFilesCreatedInTheLastNumberOfDays = $task.ProcessFilesCreatedInTheLastNumberOfDays
 
                 if ($task.ProcessFilesCreatedInTheLastNumberOfDays -lt 0) {
                     throw 'a negative number is not supported'
@@ -252,12 +201,24 @@ begin {
 
         Write-Verbose "MaxConcurrentTasks '$MaxConcurrentTasks'"
         #endregion
+
+        #region Add properties to Tasks
+        foreach ($task in $Tasks) {
+            $task | Add-Member -NotePropertyMembers @{
+                EventLogData = [System.Collections.Generic.List[PSObject]]::new()
+                LogFileData  = [System.Collections.Generic.List[PSObject]]::new()
+                SystemErrors = [System.Collections.Generic.List[PSObject]]::new()
+            }
+        }
+        #endregion
     }
     catch {
-        $systemErrors += [PSCustomObject]@{
-            DateTime = Get-Date
-            Message  = "Input file '$ConfigurationJsonFile': $_"
-        }
+        $systemErrors.Add(
+            [PSCustomObject]@{
+                DateTime = Get-Date
+                Message  = "Input file '$ConfigurationJsonFile': $_"
+            }
+        )
 
         Write-Warning $systemErrors[-1].Message
 
@@ -268,7 +229,212 @@ begin {
 process {
     if ($systemErrors) { return }
 
-    foreach ($task in $Tasks) {
+    $scriptBlock = {
+        function Start-RetryActionHC {
+            <#
+                .SYNOPSIS
+                    Run a CmdLet multiple times.
+
+                .DESCRIPTION
+                    This is useful for cases where a file is locked.
+            #>
+            [CmdletBinding()]
+            param (
+                [Parameter(Mandatory)]
+                [scriptblock]$ScriptBlock,
+                [ValidateRange(1, 25)]
+                [int]$AttemptCount = 5,
+                [ValidateRange(1, 30)]
+                [int]$WaitSecondsBetweenAttempts = 3
+            )
+
+            $attempt = @{
+                count   = 0
+                success = $false
+            }
+
+            while (
+                (-not $attempt.success) -and
+                ($attempt.count -lt $AttemptCount)
+            ) {
+                try {
+                    $attempt.count++
+                    Write-Verbose "Attempt $($attempt.count)/$AttemptCount"
+
+                    & $ScriptBlock -ErrorAction 'Stop'
+
+                    $attempt.success = $true
+                }
+                catch {
+                    if ($attempt.count -lt $AttemptCount) {
+                        Write-Warning "Attempt $($attempt.count)/$AttemptCount failed, wait $WaitSecondsBetweenAttempts seconds"
+                        Start-Sleep -Seconds $WaitSecondsBetweenAttempts
+                    }
+                    else {
+                        Write-Warning "Attempt $($attempt.count)/$AttemptCount failed: $_"
+                    }
+                    $errorMessage = $_
+                    $Error.RemoveAt(0)
+                }
+            }
+
+            if (-not $attempt.success) {
+                throw $errorMessage
+            }
+        }
+
+        try {
+            $task = $_
+
+            #region Declare variables for code running in parallel
+            if (-not $MaxConcurrentTasks) {
+                $task = $using:task
+                $EventVerboseParams = $using:EventVerboseParams
+                $ErrorActionPreference = $using:ErrorActionPreference
+            }
+            #endregion
+
+            $Action = $task.Action
+            $SourceFolder = $task.Source.Folder
+            $MatchFileNameRegex = $task.Source.MatchFileNameRegex
+            $Recurse = $task.Source.Recurse
+            $DestinationFolder = $task.Destination.Folder
+            $OverWriteFile = $task.Destination.OverWriteFile
+            $ProcessFilesCreatedInTheLastNumberOfDays = $task.ProcessFilesCreatedInTheLastNumberOfDays
+
+            #region Test folders exist
+            @{
+                'Source.Folder'      = $SourceFolder
+                'Destination.Folder' = $DestinationFolder
+            }.GetEnumerator().ForEach(
+                {
+                    $key = $_.Key
+                    $value = $_.Value
+
+                    if (!(Test-Path -LiteralPath $value -PathType Container)) {
+                        throw "$key '$value' not found"
+                    }
+                }
+            )
+            #endregion
+
+            #region Get files from source folder
+            Write-Verbose "Get all files in source folder '$SourceFolder'"
+
+            $params = @{
+                LiteralPath = $SourceFolder
+                Recurse     = $Recurse
+                File        = $true
+            }
+            $allSourceFiles = @(Get-ChildItem @params | Where-Object {
+                    $_.Name -match $MatchFileNameRegex
+                }
+            )
+
+            if (!$allSourceFiles) {
+                Write-Verbose 'No files found in source folder'
+                continue
+            }
+            #endregion
+
+            #region Select files to process
+            if ($ProcessFilesCreatedInTheLastNumberOfDays -eq 0) {
+                Write-Verbose 'Process all files in source folder'
+                $filesToProcess = $allSourceFiles
+            }
+            else {
+                $compareDate = (Get-Date).AddDays(
+                    - ($ProcessFilesCreatedInTheLastNumberOfDays - 1)
+                ).Date
+
+                Write-Verbose "Process files created since '$compareDate'"
+
+                $filesToProcess = $allSourceFiles.Where(
+                    { $_.CreationTime.Date -ge $compareDate }
+                )
+            }
+
+            $task.EventLogData.Add(
+                [PSCustomObject]@{
+                    DateTime  = Get-Date
+                    Message   = ("Found {0} file{1} to process" -f $filesToProcess.Count,
+                        $(if ($filesToProcess.Count -ne 1) { 's' }))
+                    EntryType = 'Information'
+                    EventID   = '4'
+                }
+            )
+
+            Write-Verbose $task.EventLogData[-1].Message
+
+            if (!$filesToProcess) {
+                Write-Verbose "Found $($allSourceFiles.Count) files in source folder, but no file has a creation date in the last  $ProcessFilesCreatedInTheLastNumberOfDays days"
+                continue
+            }
+            #endregion
+
+            #region Copy or move file to destination folder
+            foreach ($file in $filesToProcess) {
+                try {
+                    Write-Verbose "Processing file '$($file.FullName)'"
+
+                    $result = [PSCustomObject]@{
+                        DateTime            = Get-Date
+                        Action              = $Action
+                        SourceFolder        = $SourceFolder
+                        DestinationFolder   = $DestinationFolder
+                        MatchFileNameRegex  = $MatchFileNameRegex
+                        Recurse             = $Recurse
+                        OverWriteFile       = $OverWriteFile
+                        SourceFilePath      = $file.FullName
+                        DestinationFilePath = $null
+                        Success             = $false
+                        Error               = $null
+                    }
+
+                    $params = @{
+                        LiteralPath = $file.FullName
+                        Destination = "$($DestinationFolder)\$($file.Name)"
+                        Force       = $OverWriteFile
+                    }
+
+                    $result.DestinationFilePath = $params.Destination
+
+                    Write-Verbose "$Action file '$($params.LiteralPath)' to '$($params.Destination)'"
+
+                    Start-RetryActionHC {
+                        if ($Action -eq 'copy') {
+                            Copy-Item @params
+                        }
+                        else {
+                            Move-Item @params
+                        }
+                    }
+
+                    $result.Success = $true
+                }
+                catch {
+                    Write-Warning $_
+                    $result.Error = $_
+                }
+                finally {
+                    $task.LogFileData.Add($result)
+                }
+            }
+            #endregion
+        }
+        catch {
+            $task.SystemErrors.Add(
+                [PSCustomObject]@{
+                    DateTime = Get-Date
+                    Message  = "Action '$Action' SourceFolder '$SourceFolder' DestinationFolder '$DestinationFolder': $_"
+                }
+            )
+
+            Write-Warning $task.SystemErrors[-1].Message
+        }
+    }
+
+    <#    foreach ($task in $Tasks) {
         try {
             $Action = $task.Action
             $SourceFolder = $task.Source.Folder
@@ -405,7 +571,33 @@ process {
 
             Write-Warning $systemErrors[-1].Message
         }
+    } #>
+
+    #region Run code serial or parallel
+    $foreachParams = if ($MaxConcurrentTasks -eq 1) {
+        @{
+            Process = $scriptBlock
+        }
     }
+    else {
+        @{
+            Parallel      = $scriptBlock
+            ThrottleLimit = $MaxConcurrentTasks
+        }
+    }
+
+    $Tasks | ForEach-Object @foreachParams
+
+    Write-Verbose 'All tasks finished'
+    #endregion
+
+    #region Add tasks results to log file data
+    foreach ($task in $Tasks) {
+        $eventLogData.AddRange($task.EventLogData)
+        $systemErrors.AddRange($task.SystemErrors)
+        $logFileData.AddRange($task.LogFileData)
+    }
+    #endregion
 }
 
 end {
@@ -517,15 +709,15 @@ end {
             Supports absolute paths and paths relative to $PSScriptRoot. Returns
             the full path of the folder.
 
-        .DESCRIPTION
-            This function takes a path as input and checks if it exists. If
+            .DESCRIPTION
+            This function takes a path as input and checks if it exists. if
             the path does not exist, it attempts to create the folder. It
             handles both absolute paths and paths relative to the location of
             the currently running script ($PSScriptRoot).
 
-        .PARAMETER Path
+            .PARAMETER Path
             The path to ensure exists. This can be an absolute path (ex.
-            C:\MyFolder\SubFolder) or a path relative to the script's
+                C:\MyFolder\SubFolder) or a path relative to the script's
             directory (ex. Data\Logs).
 
         .EXAMPLE
@@ -610,75 +802,75 @@ end {
                 The sender's email address.
 
             .PARAMETER FromDisplayName
-                The display name to show for the sender.
+            The display name to show for the sender.
 
-                Email clients may display this differently. It is most likely
-                to be shown if the sender's email address is not recognized
+            Email clients may display this differently. It is most likely
+            to be shown if the sender's email address is not recognized
                 (e.g., not in the address book).
 
             .PARAMETER To
                 The recipient's email address.
 
             .PARAMETER Body
-                The body of the email, HTML is supported.
+            The body of the email, HTML is supported.
 
             .PARAMETER Subject
-                The subject of the email.
+            The subject of the email.
 
             .PARAMETER Attachments
-                An array of file paths to attach to the email.
+            An array of file paths to attach to the email.
 
             .PARAMETER Priority
-                The email priority.
+            The email priority.
 
-                Valid values are:
-                - 'Low'
-                - 'Normal'
-                - 'High'
-
-            .EXAMPLE
-                # Send an email with StartTls and credential
-
-                $SmtpUserName = 'smtpUser'
-                $SmtpPassword = 'smtpPassword'
-
-                $securePassword = ConvertTo-SecureString -String $SmtpPassword -AsPlainText -Force
-                $credential = New-Object System.Management.Automation.PSCredential($SmtpUserName, $securePassword)
-
-                $params = @{
-                    SmtpServerName      = 'SMT_SERVER@example.com'
-                    SmtpPort            = 587
-                    SmtpConnectionType  = 'StartTls'
-                    Credential          = $credential
-                    From                = 'm@example.com'
-                    To                  = '007@example.com'
-                    Body                = '<p>Mission details in attachment</p>'
-                    Subject             = 'For your eyes only'
-                    Priority            = 'High'
-                    Attachments         = @('c:\Mission.ppt', 'c:\ID.pdf')
-                    MailKitAssemblyPath = 'C:\Program Files\PackageManagement\NuGet\Packages\MailKit.4.11.0\lib\net8.0\MailKit.dll'
-                    MimeKitAssemblyPath = 'C:\Program Files\PackageManagement\NuGet\Packages\MimeKit.4.11.0\lib\net8.0\MimeKit.dll'
-                }
-
-                Send-MailKitMessageHC @params
+            Valid values are:
+            - 'Low'
+            - 'Normal'
+            - 'High'
 
             .EXAMPLE
-                # Send an email without authentication
+            # Send an email with StartTls and credential
 
-                $params = @{
-                    SmtpServerName      = 'SMT_SERVER@example.com'
-                    SmtpPort            = 25
-                    From                = 'hacker@example.com'
-                    FromDisplayName     = 'White hat hacker'
-                    Bcc                 = @('james@example.com', 'mike@example.com')
-                    Body                = '<h1>You have been hacked</h1>'
-                    Subject             = 'Oops'
-                    MailKitAssemblyPath = 'C:\Program Files\PackageManagement\NuGet\Packages\MailKit.4.11.0\lib\net8.0\MailKit.dll'
-                    MimeKitAssemblyPath = 'C:\Program Files\PackageManagement\NuGet\Packages\MimeKit.4.11.0\lib\net8.0\MimeKit.dll'
-                }
+            $SmtpUserName = 'smtpUser'
+            $SmtpPassword = 'smtpPassword'
 
-                Send-MailKitMessageHC @params
-        #>
+            $securePassword = ConvertTo-SecureString -String $SmtpPassword -AsPlainText -Force
+            $credential = New-Object System.Management.Automation.PSCredential($SmtpUserName, $securePassword)
+
+            $params = @{
+                SmtpServerName = 'SMT_SERVER@example.com'
+                SmtpPort = 587
+                SmtpConnectionType = 'StartTls'
+                Credential = $credential
+                from = 'm@example.com'
+                To = '007@example.com'
+                Body = '<p>Mission details in attachment</p>'
+                Subject = 'For your eyes only'
+                Priority = 'High'
+                Attachments = @('c:\Mission.ppt', 'c:\ID.pdf')
+                MailKitAssemblyPath = 'C:\Program Files\PackageManagement\NuGet\Packages\MailKit.4.11.0\lib\net8.0\MailKit.dll'
+                MimeKitAssemblyPath = 'C:\Program Files\PackageManagement\NuGet\Packages\MimeKit.4.11.0\lib\net8.0\MimeKit.dll'
+            }
+
+            Send-MailKitMessageHC @params
+
+            .EXAMPLE
+            # Send an email without authentication
+
+            $params = @{
+                SmtpServerName      = 'SMT_SERVER@example.com'
+                SmtpPort            = 25
+                From                = 'hacker@example.com'
+                FromDisplayName     = 'White hat hacker'
+                Bcc                 = @('james@example.com', 'mike@example.com')
+                Body                = '<h1>You have been hacked</h1>'
+                Subject             = 'Oops'
+                MailKitAssemblyPath = 'C:\Program Files\PackageManagement\NuGet\Packages\MailKit.4.11.0\lib\net8.0\MailKit.dll'
+                MimeKitAssemblyPath = 'C:\Program Files\PackageManagement\NuGet\Packages\MimeKit.4.11.0\lib\net8.0\MimeKit.dll'
+            }
+
+            Send-MailKitMessageHC @params
+            #>
 
         [CmdletBinding()]
         param (
@@ -1192,10 +1384,12 @@ end {
             }
         }
         catch {
-            $systemErrors += [PSCustomObject]@{
-                DateTime = Get-Date
-                Message  = "Failed creating log file in folder '$($saveLogFiles.Where.Folder)': $_"
-            }
+            $systemErrors.Add(
+                [PSCustomObject]@{
+                    DateTime = Get-Date
+                    Message  = "Failed creating log file in folder '$($saveLogFiles.Where.Folder)': $_"
+                }
+            )
 
             Write-Warning $systemErrors[-1].Message
         }
@@ -1216,10 +1410,12 @@ end {
                     Remove-Item -Path $_.FullName -Force
                 }
                 catch {
-                    $systemErrors += [PSCustomObject]@{
-                        DateTime = Get-Date
-                        Message  = "Failed to remove file '$fileToRemove': $_"
-                    }
+                    $systemErrors.Add(
+                        [PSCustomObject]@{
+                            DateTime = Get-Date
+                            Message  = "Failed to remove file '$fileToRemove': $_"
+                        }
+                    )
 
                     Write-Warning $systemErrors[-1].Message
 
@@ -1274,10 +1470,12 @@ end {
             }
         }
         catch {
-            $systemErrors += [PSCustomObject]@{
-                DateTime = Get-Date
-                Message  = "Failed writing events to event log: $_"
-            }
+            $systemErrors.Add(
+                [PSCustomObject]@{
+                    DateTime = Get-Date
+                    Message  = "Failed writing events to event log: $_"
+                }
+            )
 
             Write-Warning $systemErrors[-1].Message
 
@@ -1553,10 +1751,12 @@ end {
             }
         }
         catch {
-            $systemErrors += [PSCustomObject]@{
-                DateTime = Get-Date
-                Message  = "Failed sending email: $_"
-            }
+            $systemErrors.Add(
+                [PSCustomObject]@{
+                    DateTime = Get-Date
+                    Message  = "Failed sending email: $_"
+                }
+            )
 
             Write-Warning $systemErrors[-1].Message
 
@@ -1572,10 +1772,12 @@ end {
         #endregion
     }
     catch {
-        $systemErrors += [PSCustomObject]@{
-            DateTime = Get-Date
-            Message  = $_
-        }
+        $systemErrors.Add(
+            [PSCustomObject]@{
+                DateTime = Get-Date
+                Message  = $_
+            }
+        )
 
         Write-Warning $systemErrors[-1].Message
     }
