@@ -81,8 +81,8 @@ begin {
     try {
         $eventLogData.Add(
             [PSCustomObject]@{
-                DateTime  = $scriptStartTime
                 Message   = 'Script started'
+                DateTime  = $scriptStartTime
                 EntryType = 'Information'
                 EventID   = '100'
             }
@@ -1059,8 +1059,72 @@ end {
 
         .PARAMETER Events
             Specifies the events to be written to the event log. This should be
-            an array of PSCustomObject with properties: DateTime, Message,
-            EntryType, and EventID.
+            an array of PSCustomObject with properties: Message, EntryType, and
+            EventID.
+
+        .PARAMETER Events.xxx
+            All properties that are not 'EntryType' or 'EventID' will be used to
+            create a formatted message.
+
+        .PARAMETER Events.EntryType
+            The type of the event.
+
+            The following values are supported:
+            - Information
+            - Warning
+            - Error
+            - SuccessAudit
+            - FailureAudit
+
+            The default value is Information.
+
+        .PARAMETER Events.EventID
+            The ID of the event. This should be a number.
+            The default value is 4.
+
+        .EXAMPLE
+            $eventLogData = [System.Collections.Generic.List[PSObject]]::new()
+
+            $eventLogData.Add(
+                [PSCustomObject]@{
+                    Message   = 'Script started'
+                    EntryType = 'Information'
+                    EventID   = '100'
+                }
+            )
+            $eventLogData.Add(
+                [PSCustomObject]@{
+                    Message  = 'Failed to read the file'
+                    FileName = 'C:\Temp\test.txt'
+                    DateTime = Get-Date
+                    EntryType = 'Error'
+                    EventID   = '2'
+                }
+            )
+            $eventLogData.Add(
+                [PSCustomObject]@{
+                    Message  = 'Created file'
+                    FileName = 'C:\Report.xlsx'
+                    FileSize = 123456
+                    DateTime = Get-Date
+                    EntryType = 'Information'
+                    EventID   = '1'
+                }
+            )
+            $eventLogData.Add(
+                [PSCustomObject]@{
+                    Message   = 'Script finished'
+                    EntryType = 'Information'
+                    EventID   = '199'
+                }
+            )
+
+            $params = @{
+                Source  = 'Test (Brecht)'
+                LogName = 'HCScripts'
+                Events  = $eventLogData
+            }
+            Write-EventsToEventLogHC @params
         #>
 
         [CmdLetBinding()]
@@ -1089,8 +1153,24 @@ end {
                     Source      = $Source
                     EntryType   = $eventItem.EntryType
                     EventID     = $eventItem.EventID
-                    Message     = '{0}: {1}' -f $eventItem.DateTime, $eventItem.Message
+                    Message     = ''
                     ErrorAction = 'Stop'
+                }
+
+                if (-not $params.EntryType) {
+                    $params.EntryType = 'Information'
+                }
+                if (-not $params.EventID) {
+                    $params.EventID = 4
+                }
+
+                foreach (
+                    $property in
+                    $eventItem.PSObject.Properties | Where-Object {
+                        ($_.Name -ne 'EntryType') -and ($_.Name -ne 'EventID')
+                    }
+                ) {
+                    $params.Message += "`n- $($property.Name) '$($property.Value)'"
                 }
 
                 Write-Verbose "Write event to log '$LogName' source '$Source' message '$($params.Message)'"
@@ -1301,8 +1381,8 @@ end {
                 $systemErrors | ForEach-Object {
                     $eventLogData.Add(
                         [PSCustomObject]@{
-                            DateTime  = $_.DateTime
                             Message   = $_.Message
+                            DateTime  = $_.DateTime
                             EntryType = 'Error'
                             EventID   = '2'
                         }
@@ -1311,8 +1391,8 @@ end {
 
                 $eventLogData.Add(
                     [PSCustomObject]@{
-                        DateTime  = Get-Date
                         Message   = 'Script ended'
+                        DateTime  = Get-Date
                         EntryType = 'Information'
                         EventID   = '199'
                     }
