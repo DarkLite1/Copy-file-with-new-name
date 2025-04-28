@@ -1406,7 +1406,7 @@ end {
                 Write-EventsToEventLogHC @params
 
             }
-            elseif ($saveInEventLog.Save -or $saveInEventLog.LogName) {
+            elseif ($saveInEventLog.Save -and (-not $saveInEventLog.LogName)) {
                 throw "Both 'Settings.SaveInEventLog.Save' and 'Settings.SaveInEventLog.LogName' are required to save events in the event log."
             }
         }
