@@ -60,10 +60,12 @@
       {
         "Action": "(Mandatory) Specifies whether to copy or move files. Possible values: 'copy' - Copy files; 'move' - Move files. Value is not case sensitive.",
         "Source": {
+          "Folder": "(Mandatory) The path to the source folder.",
           "Recurse": "(Mandatory) Specifies whether to search for files in the root folder only or in the root folder and all child folders. Possible values: true - Search only in the root folder; false - Search in the root folder and all child folders.",
           "MatchFileNameRegex": "(Mandatory) A regular expression to match file names. Possible values: '.*' - Process all files; '.*\\.xlsx$' - Process only Excel files; 'Report_[0-9]{8}\\.xlsx$' - Process only files with names starting with 'Report_' and ending with '.xlsx' followed by 8 digits; ..."
         },
         "Destination": {
+          "Folder": "(Mandatory) The path to the destination folder.",
           "OverWriteFile": "(Mandatory) Specifies whether to overwrite duplicate files in the destination folder. Possible values: true - Overwrite duplicate files; false - Do not overwrite duplicate files and log an error."
         },
         "ProcessFilesCreatedInTheLastNumberOfDays": "(Mandatory) Specifies the number of days back to consider file creation time for processing. Possible values: 0 - Process all files in the source folder, no filter; 1 - Process files created today; 2 - Process files created since yesterday morning; 5 - Process files created in the last 4 days; ..."
