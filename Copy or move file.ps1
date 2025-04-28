@@ -1547,7 +1547,7 @@ end {
                 </tr>
                 $(
                     if($logFileDataErrors.Count) {
-                        '<tr style="background-color: #f78474;">'
+                        '<tr style="background-color: #ffe5ec;">'
                     } else {
                         '<tr>'
                     }
@@ -1557,7 +1557,7 @@ end {
                 </tr>
                 $(
                     if($systemErrors.Count) {
-                        '<tr style="background-color: #f78474;">'
+                        '<tr style="background-color: #ffe5ec;">'
                     } else {
                         '<tr>'
                     }
