@@ -55,11 +55,11 @@ Create a `.json` file with the following structure. Refer to the `?` section wit
       "Source": {
         "Folder": "C:\\folderA",
         "Recurse": true, // true - include subfolders; false - only the root folder
-        "MatchFileNameRegex": ".*\\.csv$" // Regular expression for filename matching. '.*' - all files; '.*\\.csv$' - csv file extension
+        "MatchFileNameRegex": ".*\\.csv$" // Regular expression for filename matching. '.*' - all files; '.*\\.csv$' - csv files; ...
       },
       "Destination": {
         "Folder": "D:\\folderB",
-        "OverWriteFile": true // true = overwrite existing files, false = log error if file exists
+        "OverWriteFile": true // true - overwrite existing files; false - log error if file exists
       },
     }
   ]
