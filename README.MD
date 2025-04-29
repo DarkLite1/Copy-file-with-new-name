@@ -62,5 +62,6 @@ Create a `.json` file with the following structure. Refer to the `?` section wit
         "OverWriteFile": true // true - overwrite existing files; false - log error if file exists
       },
     }
-  ]
+  ], 
+  // logging and notification settings ...
 }
