@@ -68,7 +68,7 @@
           "Folder": "(Mandatory) The path to the destination folder.",
           "OverWriteFile": "(Mandatory) Specifies whether to overwrite duplicate files in the destination folder. Possible values: true - Overwrite duplicate files; false - Do not overwrite duplicate files and log an error."
         },
-        "ProcessFilesCreatedInTheLastNumberOfDays": "(Mandatory) Specifies the number of days back to consider file creation time for processing. Possible values: 0 - Process all files in the source folder, no filter; 1 - Process files created today; 2 - Process files created since yesterday morning; 5 - Process files created in the last 4 days; ..."
+        "ProcessFilesCreatedInTheLastNumberOfDays": "(Mandatory) Select files for processing based on creation date. Possible values: 0 - Process all files; 1 - Process files created today; 2 - Process files created today and yesterday; 5 - Process files created today and 4 days before; ..."
       }
     ],
     "Settings": {
