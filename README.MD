@@ -35,7 +35,7 @@ It then executes the chosen action (copy or move) and includes comprehensive log
     * Write access to the specified `SaveLogFiles.Where.Folder` (if logging is enabled).
     * Permissions to send emails via the configured SMTP server (if email notifications are enabled).
     * Permissions to write to the specified Windows Event Log (if event logging is enabled).
-* **(Optional) MailKit and MimeKit Assemblies:** Required for email functionality. The configuration provides guidance on installing these NuGet packages.
+* **(Optional) MailKit and MimeKit Assemblies:** Required for email functionality. The configuration file provides guidance on installing these NuGet packages.
 * **(Optional) ImportExcel PowerShell Module:** Required if you intend to use `.xlsx` as a log file extension.
 
 ## Configuration
