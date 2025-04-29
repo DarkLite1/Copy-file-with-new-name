@@ -288,7 +288,6 @@ process {
 
             #region Declare variables for code running in parallel
             if (-not $MaxConcurrentTasks) {
-                $task = $using:task
                 $VerbosePreference = $using:VerbosePreference
                 $ErrorActionPreference = $using:ErrorActionPreference
             }
