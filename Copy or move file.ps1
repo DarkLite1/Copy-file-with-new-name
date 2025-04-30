@@ -19,8 +19,6 @@
 
     .PARAMETER ConfigurationJsonFile
         Contains all the parameters used by the script.
-
-    .NOTES
         See 'Example.json' for a detailed explanation of parameters.
 #>
 
