@@ -59,6 +59,7 @@
     "Tasks": [
       {
         "Action": "(Mandatory) Specifies whether to copy or move files. Possible values: 'copy' - Copy files; 'move' - Move files. Value is not case sensitive.",
+        "ProcessFilesCreatedInTheLastNumberOfDays": "(Mandatory) Select files for processing based on creation date. Possible values: 0 - Process all files; 1 - Process files created today; 2 - Process files created today and yesterday; 5 - Process files created today and 4 days before; ...",
         "Source": {
           "Folder": "(Mandatory) The path to the source folder.",
           "Recurse": "(Mandatory) Specifies whether to search for files in the root folder only or in the root folder and all child folders. Possible values: true - Search only in the root folder; false - Search in the root folder and all child folders.",
@@ -67,8 +68,7 @@
         "Destination": {
           "Folder": "(Mandatory) The path to the destination folder.",
           "OverWriteFile": "(Mandatory) Specifies whether to overwrite duplicate files in the destination folder. Possible values: true - Overwrite duplicate files; false - Do not overwrite duplicate files and log an error."
-        },
-        "ProcessFilesCreatedInTheLastNumberOfDays": "(Mandatory) Select files for processing based on creation date. Possible values: 0 - Process all files; 1 - Process files created today; 2 - Process files created today and yesterday; 5 - Process files created today and 4 days before; ..."
+        }
       }
     ],
     "Settings": {
