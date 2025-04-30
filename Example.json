@@ -7,7 +7,7 @@
       "Source": {
         "Folder": "C:\\folderA",
         "Recurse": true,
-        "MatchFileNameRegex": "Analyse_[0-9]{8}.xlsx"
+        "MatchFileNameRegex": "\\.csv$"
       },
       "Destination": {
         "Folder": "C:\\folderB",
@@ -62,7 +62,7 @@
         "Source": {
           "Folder": "(Mandatory) The path to the source folder.",
           "Recurse": "(Mandatory) Specifies whether to search for files in the root folder only or in the root folder and all child folders. Possible values: true - Search only in the root folder; false - Search in the root folder and all child folders.",
-          "MatchFileNameRegex": "(Mandatory) A regular expression to match file names. Possible values: '.*' - Process all files; '.*\\.xlsx$' - Process only Excel files; 'Report_[0-9]{8}\\.xlsx$' - Process only files with names starting with 'Report_' and ending with '.xlsx' followed by 8 digits; ..."
+          "MatchFileNameRegex": "(Mandatory) A regular expression to match file names. Possible values: '.*' - Process all files; '\\.xlsx$' - Process only Excel files; 'Report_[0-9]{8}\\.xlsx$' - Process only files with names starting with 'Report_' and ending with '.xlsx' followed by 8 digits; ..."
         },
         "Destination": {
           "Folder": "(Mandatory) The path to the destination folder.",
