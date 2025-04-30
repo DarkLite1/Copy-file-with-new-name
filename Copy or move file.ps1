@@ -39,7 +39,7 @@ begin {
     try {
         function Test-IsValidRegexHC {
             param(
-                [Parameter(Mandatory = $true)]
+                [Parameter(Mandatory)]
                 [string]$Regex
             )
             try {
@@ -48,7 +48,7 @@ begin {
                 return $true
             }
             catch {
-                return $false               # An exception indicates an invalid regex
+                return $false
             }
         }
 
@@ -105,7 +105,7 @@ begin {
             #endregion
 
             #region Test MatchFileNameRegex
-            if (-not 
+            if (-not
                 (Test-IsValidRegexHC $task.Source.MatchFileNameRegex)
             ) {
                 throw "Property 'Tasks.Source.MatchFileNameRegex' with value '$($task.Source.MatchFileNameRegex)' is not a valid regex pattern."
