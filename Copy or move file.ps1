@@ -37,6 +37,21 @@ begin {
     $scriptStartTime = Get-Date
 
     try {
+        function Test-IsValidRegexHC {
+            param(
+                [Parameter(Mandatory = $true)]
+                [string]$Regex
+            )
+            try {
+                $null = [regex]::IsMatch('', $Regex)
+
+                return $true
+            }
+            catch {
+                return $false               # An exception indicates an invalid regex
+            }
+        }
+
         $eventLogData.Add(
             [PSCustomObject]@{
                 Message   = 'Script started'
@@ -87,6 +102,14 @@ begin {
             ).foreach(
                 { throw "Property 'Tasks.Destination.$_' not found" }
             )
+            #endregion
+
+            #region Test MatchFileNameRegex
+            if (-not 
+                (Test-IsValidRegexHC $task.Source.MatchFileNameRegex)
+            ) {
+                throw "Property 'Tasks.Source.MatchFileNameRegex' with value '$($task.Source.MatchFileNameRegex)' is not a valid regex pattern."
+            }
             #endregion
 
             #region Test Action value
