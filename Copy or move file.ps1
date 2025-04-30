@@ -17,51 +17,11 @@
 
         The script will only save errors in the log folder.
 
-    .PARAMETER ImportFile
-        A .JSON file that contains all the parameters used by the script.
+    .PARAMETER ConfigurationJsonFile
+        Contains all the parameters used by the script.
 
-    .PARAMETER Tasks
-        One copy or move job for each task.
-
-    .PARAMETER Task.Action
-        - 'copy' : Copy files from the source folder to the destination folder.
-        - 'move' : Move files from the source folder to the destination folder.
-
-        Action value is not case sensitive.
-
-    .PARAMETER Task.Source.Folder
-        The source folder.
-
-    .PARAMETER Task.Source.Recurse
-        - TRUE  : search root folder and child folders for files.
-        - FALSE : search only in root folder for files.
-
-    .PARAMETER Task.Source.MatchFileNameRegex
-        Only files that match the regex will be copied.
-
-        Example:
-        - '.*'        : process all files.
-        - '.*\.xlsx$' : process only Excel files.
-
-    .PARAMETER Task.Destination.Folder
-        The destination folder.
-
-    .PARAMETER Task.Destination.OverWriteFile
-        - TRUE  : overwrite duplicate files in the destination folder.
-        - FALSE : do not overwrite duplicate files in the destination folder
-                  and log an error.
-
-    .PARAMETER Task.ProcessFilesCreatedInTheLastNumberOfDays
-        Process files that are created in the last x days.
-
-        Example:
-        - 0 : Process all files in the source folder, no filter
-        - 1 : Process files created today
-        - 2 : Process files created since yesterday morning
-        - 5 : Process files created in the last 4 days
-
-    .PARAMETER LogFolder
-        The folder where the error log files will be saved.
+    .NOTES
+        See 'Example.json' for a detailed explanation of parameters.
 #>
 
 [CmdLetBinding()]
