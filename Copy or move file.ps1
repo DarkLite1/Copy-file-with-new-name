@@ -451,6 +451,7 @@ end {
             [String]$PartialPath,
             [Parameter(Mandatory)]
             [String[]]$FileExtensions,
+            [scriptblock]$ExcelCellStyle,
             [Switch]$Append
         )
     
@@ -555,6 +556,9 @@ end {
                             TableName     = 'Overview'
                             Verbose       = $false
                         }
+                        if ($ExcelCellStyle) {
+                            $excelParams.CellStyleSB = $ExcelCellStyle
+                        }
                         $DataToExport | Export-Excel @excelParams
     
                         break
@@ -573,7 +577,7 @@ end {
     
         $allLogFilePaths
     }
-
+    
     function Get-LogFolderHC {
         <#
         .SYNOPSIS
