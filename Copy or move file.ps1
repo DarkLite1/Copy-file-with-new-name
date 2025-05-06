@@ -564,7 +564,7 @@ end {
                         break
                     }
                     default {
-                        throw "Log file extension '$_' not supported. Supported values are '.xlsx', '.txt' or '.csv'."
+                        throw "Log file extension '$_' not supported. Supported values are '.csv', '.json', '.txt' or '.xlsx'."
                     }
                 }
     
@@ -577,7 +577,7 @@ end {
     
         $allLogFilePaths
     }
-    
+
     function Get-LogFolderHC {
         <#
         .SYNOPSIS
