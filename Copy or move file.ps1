@@ -450,96 +450,127 @@ end {
             [Parameter(Mandatory)]
             [String]$PartialPath,
             [Parameter(Mandatory)]
-            [String[]]$FileExtensions
+            [String[]]$FileExtensions,
+            [Switch]$Append
         )
-
+    
         $allLogFilePaths = @()
-
+    
         foreach (
             $fileExtension in
             $FileExtensions | Sort-Object -Unique
         ) {
-            $logFilePath = "$PartialPath{0}" -f $fileExtension
-
-            $M = "Export {0} object{1} to '$logFilePath'" -f
-            $DataToExport.Count,
-            $(if ($DataToExport.Count -ne 1) { 's' })
-            Write-Verbose $M
-
-            switch ($fileExtension) {
-                '.csv' {
-                    $params = @{
-                        LiteralPath       = $logFilePath
-                        Delimiter         = ';'
-                        NoTypeInformation = $true
+            try {
+                $logFilePath = "$PartialPath{0}" -f $fileExtension
+    
+                $M = "Export {0} object{1} to '$logFilePath'" -f
+                $DataToExport.Count,
+                $(if ($DataToExport.Count -ne 1) { 's' })
+                Write-Verbose $M
+    
+                switch ($fileExtension) {
+                    '.csv' {
+                        $params = @{
+                            LiteralPath       = $logFilePath
+                            Append            = $Append
+                            Delimiter         = ';'
+                            NoTypeInformation = $true
+                        }
+                        $DataToExport | Export-Csv @params
+    
+                        break
                     }
-                    $DataToExport | Export-Csv @params
-
-                    $allLogFilePaths += $logFilePath
-                    break
-                }
-                '.json' {
-                    #region Convert error object to error message string
-                    $convertedDataToExport = foreach (
-                        $exportObject in
-                        $DataToExport
-                    ) {
-                        foreach ($property in $exportObject.PSObject.Properties) {
-                            $name = $property.Name
-                            $value = $property.Value
-                            if (
-                                $value -is [System.Management.Automation.ErrorRecord]
-                            ) {
+                    '.json' {
+                        #region Convert error object to error message string
+                        $convertedDataToExport = foreach (
+                            $exportObject in
+                            $DataToExport
+                        ) {
+                            foreach ($property in $exportObject.PSObject.Properties) {
+                                $name = $property.Name
+                                $value = $property.Value
                                 if (
-                                    $value.Exception -and $value.Exception.Message
+                                    $value -is [System.Management.Automation.ErrorRecord]
                                 ) {
-                                    $exportObject.$name = $value.Exception.Message
-                                }
-                                else {
-                                    $exportObject.$name = $value.ToString()
+                                    if (
+                                        $value.Exception -and $value.Exception.Message
+                                    ) {
+                                        $exportObject.$name = $value.Exception.Message
+                                    }
+                                    else {
+                                        $exportObject.$name = $value.ToString()
+                                    }
                                 }
                             }
+                            $exportObject
                         }
-                        $exportObject
+                        #endregion
+    
+                        if (
+                            $Append -and 
+                            (Test-Path -LiteralPath $logFilePath -PathType Leaf)
+                        ) {
+                            $params = @{
+                                LiteralPath = $logFilePath 
+                                Raw         = $true
+                                Encoding    = 'UTF8'
+                            }
+                            $jsonFileContent = Get-Content @params | ConvertFrom-Json
+    
+                            $convertedDataToExport = [array]$convertedDataToExport + [array]$jsonFileContent
+                        }
+    
+                        $convertedDataToExport |
+                        ConvertTo-Json -Depth 7 |
+                        Out-File -LiteralPath $logFilePath
+    
+                        break
                     }
-                    #endregion
-
-                    $convertedDataToExport |
-                    ConvertTo-Json -Depth 7 |
-                    Out-File -LiteralPath $logFilePath
-
-                    $allLogFilePaths += $logFilePath
-                    break
-                }
-                '.txt' {
-                    $DataToExport |
-                    Format-List -Property * -Force |
-                    Out-File -LiteralPath $logFilePath
-
-                    $allLogFilePaths += $logFilePath
-                    break
-                }
-                '.xlsx' {
-                    $excelParams = @{
-                        Path          = $logFilePath
-                        AutoNameRange = $true
-                        AutoSize      = $true
-                        FreezeTopRow  = $true
-                        WorksheetName = 'Overview'
-                        TableName     = 'Overview'
-                        Verbose       = $false
+                    '.txt' {
+                        $params = @{
+                            LiteralPath = $logFilePath 
+                            Append      = $Append
+                        }
+    
+                        $DataToExport | Format-List -Property * -Force |
+                        Out-File @params
+    
+                        break
                     }
-                    $DataToExport | Export-Excel @excelParams
-
-                    $allLogFilePaths += $logFilePath
-                    break
+                    '.xlsx' {
+                        if (
+                            (-not $Append) -and 
+                            (Test-Path -LiteralPath $logFilePath -PathType Leaf)
+                        ) {
+                            $logFilePath | Remove-Item
+                        }
+    
+                        $excelParams = @{
+                            Path          = $logFilePath
+                            Append        = $true
+                            AutoNameRange = $true
+                            AutoSize      = $true
+                            FreezeTopRow  = $true
+                            WorksheetName = 'Overview'
+                            TableName     = 'Overview'
+                            Verbose       = $false
+                        }
+                        $DataToExport | Export-Excel @excelParams
+    
+                        break
+                    }
+                    default {
+                        throw "Log file extension '$_' not supported. Supported values are '.xlsx', '.txt' or '.csv'."
+                    }
                 }
-                default {
-                    throw "Log file extension '$_' not supported. Supported values are '.xlsx', '.txt' or '.csv'."
-                }
+    
+                $allLogFilePaths += $logFilePath
+            }
+            catch {
+                Write-Warning "Failed creating log file '$logFilePath': $_"
             }
         }
-
+    
         $allLogFilePaths
     }
 
